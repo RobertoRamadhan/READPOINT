@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('reading_activities', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained();
+            $table->foreignId('ebook_id')->constrained();
+            $table->timestamp('started_at');
+            $table->timestamp('completed_at')->nullable();
+            $table->integer('current_page');
+            $table->integer('final_page')->nullable();
+            $table->integer('duration_minutes')->default(0);
+            $table->text('notes')->nullable();
+            $table->enum('status', ['ongoing', 'pending_validation', 'completed', 'rejected'])->default('ongoing');
+            $table->integer('points_earned')->nullable();
             $table->timestamps();
         });
     }

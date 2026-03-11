@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('redemptions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained();
+            $table->unsignedBigInteger('reward_id');
+            $table->integer('quantity');
+            $table->integer('points_used');
+            $table->string('claim_code')->unique();
+            $table->enum('status', ['pending', 'claimed', 'expired'])->default('pending');
+            $table->timestamp('claimed_at')->nullable();
+            $table->unsignedBigInteger('verified_by')->nullable();
             $table->timestamps();
         });
     }

@@ -1,5 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+console.log('[API] Initialized with URL:', API_URL);
+
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -9,20 +11,38 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
+  console.log(`[API] ${options.method || 'GET'} ${url}`);
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'API Error');
+  try {
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include', // Include cookies for Sanctum
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.warn('[API] Failed to parse JSON response');
+      data = { message: `HTTP ${response.status}` };
+    }
+
+    console.log(`[API] Response (${response.status}):`, data);
+
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP ${response.status}: API Error`);
+    }
+
+    return data;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Network error or server is unreachable';
+    console.error('[API] Error:', errorMessage);
+    throw new Error(errorMessage);
   }
-
-  return response.json();
 }
 
 export const api = {

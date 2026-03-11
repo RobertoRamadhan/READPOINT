@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('point_transactions', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('user_id')->constrained();
+            $table->unsignedBigInteger('reading_activity_id')->nullable();
+            $table->unsignedBigInteger('redemption_id')->nullable();
+            $table->integer('points');
+            $table->enum('type', ['reading_validation', 'reward_redemption', 'bonus', 'manual_adjustment'])->default('reading_validation');
+            $table->text('description')->nullable();
+            $table ->timestamps();
         });
     }
 

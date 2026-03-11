@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('ebooks', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->string('author');
+            $table->integer('pages');
+            $table->integer('poin_per_halaman')->default(5);
+            $table->string('category');
+            $table->enum('grade_level', ['sd', 'smp'])->default('smp');
+            $table->string('file_path')->nullable();
+            $table->string('cover_image')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

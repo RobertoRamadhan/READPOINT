@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('validations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('reading_activity_id')->constrained();
+            $table->foreignId('validated_by')->nullable()->constrained('users');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->timestamp('validated_at')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

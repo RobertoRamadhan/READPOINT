@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   role: 'admin' | 'guru' | 'siswa';
+  class_name?: string;
 }
 
 interface AuthContextType {
@@ -28,11 +29,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
 
+    console.log('[AuthContext] Initializing:', { savedUser, token });
+
     if (savedUser && token) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        console.log('[AuthContext] User loaded from storage:', parsedUser);
+        setUser(parsedUser);
       } catch (error) {
-        console.error('Failed to parse user:', error);
+        console.error('[AuthContext] Failed to parse user:', error);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
       }
@@ -41,12 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (newUser: User, token: string) => {
+    console.log('[AuthContext] Logging in user:', newUser);
     setUser(newUser);
     localStorage.setItem('user', JSON.stringify(newUser));
     localStorage.setItem('token', token);
   };
 
   const logout = () => {
+    console.log('[AuthContext] Logging out');
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
