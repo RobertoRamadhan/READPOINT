@@ -22,6 +22,11 @@ class Ebook extends Model
         'is_active' => 'boolean',
     ];
 
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
+    }
+
     public function readingActivities()
     {
         return $this->hasMany(ReadingActivity::class);

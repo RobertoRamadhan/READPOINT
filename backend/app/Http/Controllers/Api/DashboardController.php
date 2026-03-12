@@ -8,6 +8,10 @@ use App\Models\Ebook;
 use App\Models\Reward;
 use App\Models\QuizAttempt;
 use App\Models\ReadingActivity;
+use App\Models\BookAssignment;
+use App\Models\QuizQuestion;
+use App\Models\Validation;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -48,6 +52,99 @@ class DashboardController extends Controller
 
     // Admin - All EBooks
     public function adminBooks()
+    {
+        $books = Ebook::select('id', 'title', 'author', 'pages', 'category', 'is_active')
+            ->with('readingActivities')
+            ->paginate(10);
+
+        return response()->json($books);
+    }
+
+    // Guru Dashboard Stats
+    public function guruStats(Request $request)
+    {
+        $user = $request->user();
+        
+        $stats = [
+            'total_siswa' => BookAssignment::where('teacher_id', $user->id)->distinct('user_id')->count(),
+            'total_kuis_dibuat' => QuizQuestion::where('created_by', $user->id)->count(),
+            'validasi_pending' => Validation::where('validated_by', null)->count(),
+            'siswa_aktif_hari_ini' => ReadingActivity::whereDate('created_at', today())
+                ->whereIn('user_id', function ($q) use ($user) {
+                    $q->select('user_id')->from('book_assignments')->where('teacher_id', $user->id);
+                })
+                ->distinct('user_id')
+                ->count(),
+        ];
+        
+        return response()->json($stats);
+    }
+
+    // Guru - My Students
+    public function guruStudents(Request $request)
+    {
+        $user = $request->user();
+        
+        $students = User::where('role', 'siswa')
+            ->select('id', 'name', 'email', 'class_name')
+            ->get()
+            ->map(function ($student) {
+                $student->total_points = DB::table('point_transactions')
+                    ->where('user_id', $student->id)
+                    ->sum('points');
+                $student->books_read = ReadingActivity::where('user_id', $student->id)
+                    ->where('status', 'completed')
+                    ->count();
+                return $student;
+            });
+
+        return response()->json($students);
+    }
+
+    // Siswa Dashboard Stats
+    public function siswaStats(Request $request)
+    {
+        $user = $request->user();
+        
+        $totalPoints = $user->getTotalPoints();
+        $booksRead = $user->readingActivities()->where('status', 'completed')->count();
+        $pagesRead = $user->readingActivities()->sum('final_page') ?? 0;
+        $quizzesTaken = $user->quizAttempts()->count();
+
+        $stats = [
+            'total_points' => $totalPoints,
+            'books_read' => $booksRead,
+            'pages_read' => $pagesRead,
+            'quizzes_taken' => $quizzesTaken,
+        ];
+
+        return response()->json($stats);
+    }
+
+    // Siswa - Available Books
+    public function siswaBooks()
+    {
+        $books = Ebook::where('is_active', true)
+            ->select('id', 'title', 'author', 'pages', 'poin_per_halaman', 'category', 'cover_image')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        return response()->json($books);
+    }
+
+    // Siswa - My Points History
+    public function siswaPointsHistory(Request $request)
+    {
+        $user = $request->user();
+        
+        $history = DB::table('point_transactions')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($history);
+    }
+}
     {
         $books = Ebook::paginate(10);
         return response()->json($books);

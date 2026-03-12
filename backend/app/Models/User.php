@@ -50,4 +50,41 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Relationships
+    public function readingActivities()
+    {
+        return $this->hasMany(ReadingActivity::class);
+    }
+
+    public function quizAttempts()
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+
+    public function pointTransactions()
+    {
+        return $this->hasMany(PointTransaction::class);
+    }
+
+    public function redemptions()
+    {
+        return $this->hasMany(Redemption::class);
+    }
+
+    public function validatedReadings()
+    {
+        return $this->hasMany(Validation::class, 'validated_by');
+    }
+
+    public function bookAssignments()
+    {
+        return $this->hasMany(BookAssignment::class);
+    }
+
+    // Get total points for user
+    public function getTotalPoints()
+    {
+        return $this->pointTransactions()->sum('points');
+    }
 }

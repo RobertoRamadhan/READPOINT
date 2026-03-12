@@ -15,6 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
+
+        // Register custom middleware
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\IsAdmin::class,
+            'guru' => \App\Http\Middleware\IsGuru::class,
+            'siswa' => \App\Http\Middleware\IsSiswa::class,
+            'verify.ownership' => \App\Http\Middleware\VerifyUserOwnership::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

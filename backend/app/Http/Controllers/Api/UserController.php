@@ -1,0 +1,134 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class UserController extends Controller
+{
+    /**
+     * Get all users (Admin only)
+     */
+    public function index(Request $request)
+    {
+        $query = User::query();
+
+        // Filter by role
+        if ($request->has('role')) {
+            $query->where('role', $request->role);
+        }
+
+        // Search by name or email
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->select('id', 'name', 'email', 'role', 'grade_level', 'class_name')
+            ->paginate(15);
+
+        return response()->json([
+            'data' => $users->items(),
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'last_page' => $users->lastPage(),
+            ],
+        ]);
+    }
+
+    /**
+     * Get detailed user info including statistics
+     */
+    public function show(string $id)
+    {
+        $user = User::findOrFail($id);
+
+        // Calculate user statistics
+        $totalPoints = $user->getTotalPoints();
+        $booksRead = $user->readingActivities()->where('status', 'completed')->count();
+        $pagesRead = $user->readingActivities()->sum('final_page');
+        $quizzesTaken = $user->quizAttempts()->count();
+
+        return response()->json([
+            'data' => [
+                'user' => $user,
+                'statistics' => [
+                    'total_points' => $totalPoints,
+                    'books_read' => $booksRead,
+                    'pages_read' => $pagesRead ?? 0,
+                    'quizzes_taken' => $quizzesTaken,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Update user info (Admin only)
+     */
+    public function update(Request $request, string $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $id,
+            'grade_level' => 'sometimes|in:7,8,9',
+            'class_name' => 'sometimes|string|max:100',
+            'role' => 'sometimes|in:siswa,guru,admin',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'data' => $user,
+        ]);
+    }
+
+    /**
+     * Reset user password (Admin only)
+     */
+    public function resetPassword(Request $request, string $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return response()->json([
+            'message' => 'User password reset successfully',
+        ]);
+    }
+
+    /**
+     * Get statistics (Admin dashboard)
+     */
+    public function getStatistics()
+    {
+        $totalSiswa = User::where('role', 'siswa')->count();
+        $totalGuru = User::where('role', 'guru')->count();
+        $totalAdmin = User::where('role', 'admin')->count();
+
+        return response()->json([
+            'statistics' => [
+                'total_siswa' => $totalSiswa,
+                'total_guru' => $totalGuru,
+                'total_admin' => $totalAdmin,
+                'total_users' => $totalSiswa + $totalGuru + $totalAdmin,
+            ],
+        ]);
+    }
+}
