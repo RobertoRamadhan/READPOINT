@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
                 'email' => $email,
                 'password' => Hash::make('password123'),
                 'role' => 'siswa',
-                'grade_level' => 8,
+                'grade_level' => 'smp',
                 'class_name' => $class,
             ]);
         }
@@ -181,34 +181,5 @@ class DatabaseSeeder extends Seeder
         echo "   Admin: admin@readpoint.com / password123\n";
         echo "   Guru: guru.budi@school.com / password123\n";
         echo "   Siswa: rina@student.com / password123\n";
-    }
-}
-
-            'points_required' => 1000,
-            'stock' => 30,
-            'category' => 'Merchandise',
-            'icon' => '👕',
-            'is_active' => true,
-        ]);
-
-        Reward::create([
-            'name' => 'Pensil Mewah Set',
-            'description' => 'Set pensil premium untuk menulis dan menggambar',
-            'points_required' => 200,
-            'stock' => 75,
-            'category' => 'Alat Tulis',
-            'icon' => '✏️',
-            'is_active' => true,
-        ]);
-
-        Reward::create([
-            'name' => 'Bookmark Edisi Khusus',
-            'description' => 'Bookmark cantik dengan desain eksklusif',
-            'points_required' => 100,
-            'stock' => 200,
-            'category' => 'Aksesori',
-            'icon' => '🔖',
-            'is_active' => true,
-        ]);
     }
 }
