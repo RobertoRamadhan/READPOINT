@@ -89,22 +89,6 @@ export default function RegisterPage() {
             disabled={loading}
           />
         </div>
-
-        <div>
-          <label className="block text-gray-700 mb-2 font-semibold">Role</label>
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            className="w-full px-4 py-2 rounded-lg bg-sky-50 border-2 border-sky-200 text-gray-800 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-            disabled={loading}
-          >
-            <option value="siswa">Siswa</option>
-            <option value="guru">Guru</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
         <div>
           <label className="block text-gray-700 mb-2 font-semibold">Password</label>
           <input
