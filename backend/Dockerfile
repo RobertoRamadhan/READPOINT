@@ -17,17 +17,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy application code FIRST
+# Copy application code
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Generate app key
-RUN php artisan key:generate --force
-
-# Create storage directories
-RUN mkdir -p storage/logs && chmod -R 775 storage bootstrap/cache
+# Copy .env.example to .env for Laravel
+RUN cp .env.example .env && \
+    composer install --no-dev --optimize-autoloader --no-interaction && \
+    mkdir -p storage/logs && chmod -R 775 storage bootstrap/cache
 
 # Copy nginx config
 COPY nginx.conf /etc/nginx/sites-available/default
@@ -36,6 +32,4 @@ COPY nginx.conf /etc/nginx/sites-available/default
 EXPOSE 8080
 
 # Start nginx and PHP-FPM
-CMD php artisan migrate --force && \
-    php-fpm -D && \
-    nginx -g "daemon off;"
+CMD php artisan migrate --force; php-fpm -D; nginx -g "daemon off;"
