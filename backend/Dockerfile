@@ -17,14 +17,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy composer files
-COPY composer.json composer.lock ./
+# Copy application code FIRST
+COPY . .
 
 # Install dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-# Copy application code
-COPY . .
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Generate app key
 RUN php artisan key:generate --force
