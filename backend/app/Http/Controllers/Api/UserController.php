@@ -114,6 +114,35 @@ class UserController extends Controller
     }
 
     /**
+     * Create new user (Admin only)
+     */
+    public function createUser(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string|min:6',
+            'role' => 'required|in:siswa,guru,admin',
+            'grade_level' => 'required_if:role,siswa|in:7,8,9',
+            'class_name' => 'nullable|string|max:100',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'grade_level' => $validated['grade_level'] ?? null,
+            'class_name' => $validated['class_name'] ?? null,
+        ]);
+
+        return response()->json([
+            'message' => 'User created successfully',
+            'data' => $user,
+        ], 201);
+    }
+
+    /**
      * Get statistics (Admin dashboard)
      */
     public function getStatistics()

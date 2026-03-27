@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\QuizController;
 use App\Http\Controllers\Api\RewardController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ValidationController;
 
 // Public Routes
 Route::post('auth/login', [AuthController::class, 'login']);
@@ -50,6 +51,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('quiz/{id}', [QuizController::class, 'deleteQuiz']);
     });
     
+    // Validasi Pembacaan (Guru: validate, Admin: view)
+    Route::middleware('guru')->group(function () {
+        Route::get('validations/pending', [ValidationController::class, 'getPending']);
+        Route::get('validations/{id}', [ValidationController::class, 'getDetail']);
+        Route::put('validations/{id}/approve', [ValidationController::class, 'approve']);
+        Route::put('validations/{id}/reject', [ValidationController::class, 'reject']);
+        Route::get('validations/history', [ValidationController::class, 'getHistory']);
+        Route::get('validations/stats', [ValidationController::class, 'getStatistics']);
+    });
+    
     // Rewards (Siswa: view & redeem, Admin: manage)
     Route::get('rewards', [RewardController::class, 'index']);
     Route::get('rewards/{id}', [RewardController::class, 'show']);
@@ -77,12 +88,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('guru')->group(function () {
         Route::get('dashboard/guru/stats', [DashboardController::class, 'guruStats']);
         Route::get('dashboard/guru/students', [DashboardController::class, 'guruStudents']);
+        Route::get('dashboard/guru/class-stats', [DashboardController::class, 'guruClassStats']);
+        Route::get('dashboard/guru/quizzes', [DashboardController::class, 'guruQuizzes']);
     });
     
     Route::middleware('siswa')->group(function () {
         Route::get('dashboard/siswa/stats', [DashboardController::class, 'siswaStats']);
         Route::get('dashboard/siswa/books', [DashboardController::class, 'siswaBooks']);
         Route::get('dashboard/siswa/points-history', [DashboardController::class, 'siswaPointsHistory']);
+        Route::get('dashboard/siswa/quiz-attempts', [DashboardController::class, 'siswaQuizAttempts']);
+        Route::get('dashboard/siswa/rewards', [DashboardController::class, 'siswaRewards']);
+        Route::get('dashboard/siswa/reading-activities', [DashboardController::class, 'siswaReadingActivities']);
+        Route::get('dashboard/siswa/weekly-progress', [DashboardController::class, 'siswaWeeklyProgress']);
+        Route::get('dashboard/siswa/completed-books', [DashboardController::class, 'siswaCompletedBooks']);
     });
     
     // User management (Admin only)
@@ -91,8 +109,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('users/{id}', [UserController::class, 'show']);
         Route::put('users/{id}', [UserController::class, 'update']);
         Route::post('users/{id}/reset-password', [UserController::class, 'resetPassword']);
+        Route::post('users/create', [UserController::class, 'createUser']);
         Route::get('dashboard/admin/users-stats', [UserController::class, 'getStatistics']);
     });
 });
+
 
 

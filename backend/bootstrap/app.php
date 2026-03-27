@@ -25,5 +25,19 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (Throwable $e, Illuminate\Http\Request $request) {
+            // Handle unauthenticated API requests
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Unauthenticated'], 401);
+                }
+            }
+            // Handle missing login route for API requests
+            if ($e instanceof \Symfony\Component\Routing\Exception\RouteNotFoundException) {
+                if ($request->expectsJson() && strpos($request->path(), 'api') === 0) {
+                    return response()->json(['message' => 'Unauthenticated'], 401);
+                }
+            }
+            return null;
+        });
     })->create();

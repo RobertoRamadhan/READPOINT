@@ -26,6 +26,7 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     let data;
     try {
       data = await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.warn('[API] Failed to parse JSON response');
       data = { message: `HTTP ${response.status}` };
@@ -53,7 +54,7 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
   logout: () => apiCall('/auth/logout', { method: 'POST' }),
-  register: (data: any) =>
+  register: (data: unknown) =>
     apiCall('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -62,7 +63,7 @@ export const api = {
   // Books
   getBooks: () => apiCall('/books'),
   getBook: (id: number) => apiCall(`/books/${id}`),
-  createBook: (data: any) =>
+  createBook: (data: unknown) =>
     apiCall('/books', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -82,7 +83,7 @@ export const api = {
 
   // Reading Progress
   getReadingProgress: () => apiCall('/reading-progress'),
-  updateReadingProgress: (id: number, data: any) =>
+  updateReadingProgress: (id: number, data: unknown) =>
     apiCall(`/reading-progress/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -94,12 +95,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ ebook_id: ebookId }),
     }),
-  updateReadingProgress: (activityId: number, data: any) =>
+  updateActivityProgress: (activityId: number, data: unknown) =>
     apiCall(`/reading-activities/${activityId}/progress`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-  completeReading: (activityId: number, data: any) =>
+  completeReading: (activityId: number, data: unknown) =>
     apiCall(`/reading-activities/${activityId}/complete`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -108,7 +109,7 @@ export const api = {
 
   // Quizzes
   getQuizzes: (bookId: number) => apiCall(`/ebooks/${bookId}/quiz`),
-  submitQuiz: (data: any) =>
+  submitQuiz: (data: unknown) =>
     apiCall('/quiz/submit', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -116,15 +117,6 @@ export const api = {
   getMyQuizAttempts: () => apiCall('/quiz/my-attempts'),
 
   // Rewards
-  getRewards: () => apiCall('/rewards'),
-  getReward: (id: number) => apiCall(`/rewards/${id}`),
-  redeemReward: (id: number, quantity: number = 1) =>
-    apiCall(`/rewards/${id}/redeem`, {
-      method: 'POST',
-      body: JSON.stringify({ quantity }),
-    }),
-  getMyRedemptions: () => apiCall('/my-redemptions'),
-  getUserPoints: () => apiCall('/user-points'),
 
   // Dashboard - Admin
   dashboard: {
@@ -143,14 +135,70 @@ export const api = {
     siswaPointsHistory: () => apiCall('/dashboard/siswa/points-history'),
   },
 
+  // E-Books (Admin CRUD)
+  ebooks: {
+    list: () => apiCall('/ebooks'),
+    get: (id: number) => apiCall(`/ebooks/${id}`),
+    create: (data: unknown) =>
+      apiCall('/ebooks', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: unknown) =>
+      apiCall(`/ebooks/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) =>
+      apiCall(`/ebooks/${id}`, {
+        method: 'DELETE',
+      }),
+  },
+
+  // Rewards (Admin CRUD)
+  rewards: {
+    list: () => apiCall('/rewards'),
+    get: (id: number) => apiCall(`/rewards/${id}`),
+    create: (data: unknown) =>
+      apiCall('/rewards', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: unknown) =>
+      apiCall(`/rewards/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) =>
+      apiCall(`/rewards/${id}`, {
+        method: 'DELETE',
+      }),
+    redeem: (id: number, quantity: number = 1) =>
+      apiCall(`/rewards/${id}/redeem`, {
+        method: 'POST',
+        body: JSON.stringify({ quantity }),
+      }),
+    getMyRedemptions: () => apiCall('/my-redemptions'),
+    getUserPoints: () => apiCall('/user-points'),
+  },
+
   // Users (Admin only)
   users: {
     getAll: (role?: string) => apiCall(`/users${role ? `?role=${role}` : ''}`),
     get: (id: number) => apiCall(`/users/${id}`),
-    update: (id: number, data: any) =>
+    create: (data: unknown) =>
+      apiCall('/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: unknown) =>
       apiCall(`/users/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
+      }),
+    delete: (id: number) =>
+      apiCall(`/users/${id}`, {
+        method: 'DELETE',
       }),
     resetPassword: (id: number, password: string) =>
       apiCall(`/users/${id}/reset-password`, {

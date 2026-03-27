@@ -60,7 +60,7 @@ export default function SiswaDashboard() {
           const [statsRes, ebooksRes, rewardsRes] = await Promise.all([
             api.dashboard.siswaStats(),
             api.dashboard.siswaBooks(),
-            api.getRewards(),
+            api.rewards.list(),
           ]);
           setStats(statsRes || {});
           setEbooks(Array.isArray(ebooksRes) ? ebooksRes : 

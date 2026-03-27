@@ -113,4 +113,99 @@ class QuizController extends Controller
             'data' => $attempts,
         ]);
     }
+
+    // Guru: Create quiz questions
+    public function createQuiz(Request $request)
+    {
+        $validated = $request->validate([
+            'ebook_id' => 'required|exists:ebooks,id',
+            'questions' => 'required|array|size:5', // Exactly 5 questions
+            'questions.*.question' => 'required|string',
+            'questions.*.option_a' => 'required|string',
+            'questions.*.option_b' => 'required|string',
+            'questions.*.option_c' => 'required|string',
+            'questions.*.option_d' => 'required|string',
+            'questions.*.correct_answer' => 'required|in:a,b,c,d',
+        ]);
+
+        $guru = $request->user();
+        $ebookId = $validated['ebook_id'];
+
+        // Delete existing quiz for this ebook if any
+        QuizQuestion::where('ebook_id', $ebookId)
+            ->where('created_by', $guru->id)
+            ->delete();
+
+        $createdQuestions = [];
+
+        foreach ($validated['questions'] as $q) {
+            $question = QuizQuestion::create([
+                'ebook_id' => $ebookId,
+                'question' => $q['question'],
+                'option_a' => $q['option_a'],
+                'option_b' => $q['option_b'],
+                'option_c' => $q['option_c'],
+                'option_d' => $q['option_d'],
+                'correct_answer' => strtolower($q['correct_answer']),
+                'created_by' => $guru->id,
+            ]);
+            $createdQuestions[] = $question;
+        }
+
+        return response()->json([
+            'message' => 'Quiz created with 5 questions',
+            'data' => $createdQuestions,
+        ], 201);
+    }
+
+    // Guru: Update single quiz question
+    public function updateQuiz(Request $request, $questionId)
+    {
+        $validated = $request->validate([
+            'question' => 'sometimes|string',
+            'option_a' => 'sometimes|string',
+            'option_b' => 'sometimes|string',
+            'option_c' => 'sometimes|string',
+            'option_d' => 'sometimes|string',
+            'correct_answer' => 'sometimes|in:a,b,c,d',
+        ]);
+
+        $question = QuizQuestion::findOrFail($questionId);
+
+        // Ensure guru owns this question
+        if ($question->created_by !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $question->update([
+            'question' => $validated['question'] ?? $question->question,
+            'option_a' => $validated['option_a'] ?? $question->option_a,
+            'option_b' => $validated['option_b'] ?? $question->option_b,
+            'option_c' => $validated['option_c'] ?? $question->option_c,
+            'option_d' => $validated['option_d'] ?? $question->option_d,
+            'correct_answer' => isset($validated['correct_answer']) ? strtolower($validated['correct_answer']) : $question->correct_answer,
+        ]);
+
+        return response()->json([
+            'message' => 'Quiz question updated',
+            'data' => $question,
+        ]);
+    }
+
+    // Guru: Delete quiz question
+    public function deleteQuiz(Request $request, $questionId)
+    {
+        $question = QuizQuestion::findOrFail($questionId);
+
+        // Ensure guru owns this question
+        if ($question->created_by !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $question->delete();
+
+        return response()->json([
+            'message' => 'Quiz question deleted',
+        ]);
+    }
 }
