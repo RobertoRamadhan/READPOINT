@@ -28,8 +28,12 @@ RUN cp .env.example .env && \
 # Copy nginx config
 COPY nginx.conf /etc/nginx/sites-available/default
 
+# Copy startup script
+COPY .railway/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Expose port
 EXPOSE 8080
 
-# Start nginx and PHP-FPM
-CMD php artisan migrate --force; php-fpm -D; nginx -g "daemon off;"
+# Start application
+CMD ["/app/start.sh"]
