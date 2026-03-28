@@ -70,31 +70,55 @@ echo "Final .env database config:"
 grep "^DB_" /app/.env || echo "(No DB_* variables found in .env)"
 echo ""
 
-# Wait for MySQL with simple delay
-echo "Waiting for MySQL..."
-sleep 5
+# Wait for MySQL to be available with connection checks
+echo "Waiting for MySQL to become available..."
+MYSQL_READY=0
+for i in {1..30}; do
+    if php artisan tinker --no-interaction <<EOF 2>/dev/null
+exit
+EOF
+    then
+        echo "✓ MySQL connection successful!"
+        MYSQL_READY=1
+        break
+    else
+        echo "⏳ MySQL not ready (attempt $i/30) - waiting..."
+        sleep 2
+    fi
+done
 
-# Run migrations with retry
+if [ $MYSQL_READY -eq 0 ]; then
+    echo "⚠ Warning: Could not establish MySQL connection after 60 seconds"
+fi
+
+# Run migrations with enhanced error handling
 echo "Running database migrations..."
 MIGRATION_SUCCESS=0
 for i in {1..5}; do
-    if php artisan migrate --force 2>&1; then
+    if php artisan migrate --force 2>&1 | tee /tmp/migration.log; then
         echo "✓ Migrations completed successfully!"
         MIGRATION_SUCCESS=1
         break
     else
         echo "✗ Migration attempt $i failed, retrying in 3 seconds..."
+        echo "Database connection string: DB_HOST=$DB_HOST, DB_USER=$DB_USERNAME, DB_NAME=$DB_DATABASE"
         sleep 3
     fi
 done
 
 if [ $MIGRATION_SUCCESS -eq 0 ]; then
-    echo "⚠ Warning: Migrations failed after 5 attempts. Continuing anyway..."
+    echo "⚠ Warning: Migrations still failing. Checking .env file:"
+    grep "^DB_" /app/.env || echo "(No DB config found)"
+    echo "Continuing with start anyway (data may not exist)..."
 fi
 
 # Seed database (optional)
 echo "Seeding database..."
-php artisan db:seed --force 2>&1 || echo "⚠ Seed completed (may have skipped if data exists)"
+if [ -f /app/database/seeders/DatabaseSeeder.php ]; then
+    php artisan db:seed --class=Database\\Seeders\\DatabaseSeeder --force 2>&1 || echo "⚠ Seeding completed with warnings (may have skipped if data exists)"
+else
+    echo "⚠ DatabaseSeeder not found, skipping seed"
+fi
 
 # Clear caches (already done above, skip redundant calls)
 echo "Optimization complete!"

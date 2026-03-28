@@ -5,6 +5,6 @@
     "dockerfile": "./Dockerfile"
   },
   "deploy": {
-    "startCommand": "php artisan migrate --force && php-fpm -D && nginx -g 'daemon off;'"
+    "startCommand": "/app/start.sh && php-fpm -D && nginx -g 'daemon off;'"
   }
 }
