@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Clear caches FIRST before anything (important!)
+echo "Clearing caches..."
+php artisan config:clear 2>&1 || true
+php artisan cache:clear 2>&1 || true
+php artisan route:clear 2>&1 || true
+php artisan view:clear 2>&1 || true
+
 echo "=========================================="
 echo "Starting READPOINT Laravel Application"
 echo "=========================================="
@@ -89,13 +96,8 @@ fi
 echo "Seeding database..."
 php artisan db:seed --force 2>&1 || echo "⚠ Seed completed (may have skipped if data exists)"
 
-# Clear caches
-echo "Optimizing application..."
-php artisan config:clear 2>&1 || true
-php artisan cache:clear 2>&1 || true
-php artisan view:clear 2>&1 || true
-php artisan route:clear 2>&1 || true
-php artisan optimize:clear 2>&1 || true
+# Clear caches (already done above, skip redundant calls)
+echo "Optimization complete!"
 
 echo "=========================================="
 echo "✓ Application ready!"
