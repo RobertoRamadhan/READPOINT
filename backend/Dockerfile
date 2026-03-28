@@ -20,9 +20,8 @@ WORKDIR /app
 # Copy application code
 COPY . .
 
-# Copy .env.example to .env for Laravel
-RUN cp .env.example .env && \
-    composer install --no-dev --optimize-autoloader --no-interaction && \
+# Install composer dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction && \
     mkdir -p storage/logs && chmod -R 775 storage bootstrap/cache
 
 # Copy nginx config
