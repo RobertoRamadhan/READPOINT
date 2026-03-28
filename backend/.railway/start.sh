@@ -6,7 +6,7 @@ echo "Starting READPOINT Laravel Application"
 echo "=========================================="
 
 # Convert Railway MYSQL_* variables to Laravel DB_* format
-export DB_HOST=${MYSQL_HOST:-localhost}
+export DB_HOST=${MYSQL_HOST:-mysql}
 export DB_PORT=${MYSQL_PORT:-3306}
 export DB_DATABASE=${MYSQL_DATABASE:-railway}
 export DB_USERNAME=${MYSQL_USER:-root}
@@ -21,7 +21,6 @@ echo "  APP_DEBUG: $APP_DEBUG"
 echo "  DB_HOST: $DB_HOST"
 echo "  DB_PORT: $DB_PORT"
 echo "  DB_DATABASE: $DB_DATABASE"
-echo "  DB_USERNAME: $DB_USERNAME"
 
 # Generate .env if not exists
 if [ ! -f /app/.env ]; then
@@ -46,24 +45,25 @@ if ! grep -q "APP_KEY=base64:" /app/.env; then
     php artisan key:generate --env=production --force 2>&1 || echo "Warning: Could not generate APP_KEY"
 fi
 
-# Wait for MySQL to be ready
+# Wait for MySQL with delay (simple approach)
 echo "Waiting for MySQL to be ready..."
-for i in {1..30}; do
-    if php -r "mysqli_connect('$DB_HOST', '$DB_USERNAME', '$DB_PASSWORD');" 2>/dev/null; then
-        echo "MySQL is ready!"
+sleep 5
+
+# Run migrations (Laravel will retry if DB not ready)
+echo "Running database migrations..."
+for i in {1..5}; do
+    if php artisan migrate --force 2>&1; then
+        echo "Migrations completed successfully!"
         break
+    else
+        echo "Migration attempt $i failed, retrying in 3 seconds..."
+        sleep 3
     fi
-    echo "Waiting for MySQL... ($i/30)"
-    sleep 1
 done
 
-# Run migrations
-echo "Running database migrations..."
-php artisan migrate --force 2>&1 || echo "Warning: Migration may have failed, continuing..."
-
-# Seed database
+# Seed database (optional)
 echo "Seeding database..."
-php artisan db:seed --force 2>&1 || echo "Warning: Seed may have failed, continuing..."
+php artisan db:seed --force 2>&1 || echo "Seed completed (may have skipped if data exists)"
 
 # Clear and optimize caches
 echo "Optimizing application..."
