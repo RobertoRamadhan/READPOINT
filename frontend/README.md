@@ -1,33 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# READPOINT - Frontend
 
-## Getting Started
+Platform Literasi Digital dengan Gamifikasi - Frontend built with Next.js 16, React 19, and Tailwind CSS 4.
 
-First, run the development server:
+## 🎨 UI/UX Redesign Features
+
+- **Modern Design**: Clean, professional interface with gradient backgrounds and smooth animations
+- **Fully Responsive**: Optimized for mobile, tablet, and desktop devices
+- **Accessibility**: Proper focus states, ARIA labels, and keyboard navigation
+- **Performance**: Next.js 16 with Turbopack for fast development and production builds
+- **Tailwind CSS 4**: Advanced styling with custom animations and components
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run linting
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+frontend/
+├── app/
+│   ├── page.tsx           # Landing page
+│   ├── layout.tsx         # Root layout
+│   ├── globals.css        # Global styles & animations
+│   ├── login/             # Login page
+│   ├── register/          # Register page
+│   ├── dashboard/         # Dashboard layout
+│   ├── auth/              # Auth routes
+│   └── providers.tsx      # Context providers
+├── components/
+│   ├── PDFReader.tsx      # E-book PDF viewer
+│   ├── QuizInterface.tsx  # Quiz component
+├── context/
+│   └── AuthContext.tsx    # Authentication context
+├── lib/
+│   └── api.ts             # API utilities
+├── public/
+│   └── images/            # Static assets
+├── tailwind.config.ts     # Tailwind configuration
+├── postcss.config.mjs     # PostCSS configuration
+├── next.config.ts         # Next.js configuration
+└── tsconfig.json          # TypeScript configuration
+```
 
-## Learn More
+## 🎯 Key Pages
 
-To learn more about Next.js, take a look at the following resources:
+- **Landing Page** (`/`): Hero section with features and statistics
+- **Login** (`/login`): User authentication
+- **Register** (`/register`): Account creation
+- **Dashboard** (`/dashboard`): Protected user dashboard
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎨 Design System
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Colors
+- **Primary**: Blue (#0ea5e9)
+- **Accent**: Amber (#f59e0b)
+- **Success**: Green (#10b981)
+- **Danger**: Red (#ef4444)
+
+### Typography
+- **Headings**: Clamp values for responsive font sizes
+- **Body**: Clean system fonts with optimal line-height
+
+### Animations
+- `fade-in`: Smooth opacity animation
+- `slide-up/down/left/right`: Directional slide animations
+- `scale-in`: Scale entrance animation
+- `blob`: Floating blob animation
+- `pulse-glow`: Pulsing glow effect
+
+## 🔧 Technologies
+
+- **Framework**: Next.js 16.1.6
+- **UI Library**: React 19.2.3
+- **Styling**: Tailwind CSS 4
+- **Language**: TypeScript 5
+- **Linting**: ESLint 9
+
+## 🌐 Environment Variables
+
+Create a `.env.local` file:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+## 📱 Responsive Design
+
+- **Mobile**: < 640px (sm breakpoint)
+- **Tablet**: 640px - 1024px (md/lg breakpoints)
+- **Desktop**: > 1024px (lg breakpoint)
+
+## ✨ Features
+
+- ✅ Modern gradient UI with animations
+- ✅ Fully responsive design
+- ✅ Dark mode ready (CSS variables)
+- ✅ Accessibility compliant
+- ✅ Performance optimized
+- ✅ Clean, maintainable code
+
+## 📝 Notes
+
+- All components use Next.js best practices
+- CSS is managed through Tailwind + global styles
+- Authentication uses Laravel Sanctum
+- Forms include validation and error handling
+
+## 🤝 Contributing
+
+Guidelines for code contributions:
+- Follow the existing folder structure
+- Use TypeScript for all new files
+- Keep components small and focused
+- Document complex logic with comments
+
+## 📄 License
+
+MIT
+
+---
+
+**READPOINT - Platform Literasi Digital Indonesia © 2026**
 
 ## Deploy on Vercel
 

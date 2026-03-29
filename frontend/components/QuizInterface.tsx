@@ -21,7 +21,6 @@ export interface QuizInterfaceProps {
 }
 
 export default function QuizInterface({
-  quizId,
   ebookTitle,
   questions,
   onSubmit,
@@ -60,7 +59,6 @@ export default function QuizInterface({
   };
 
   const handleSubmitQuiz = () => {
-    // Calculate score
     let correctCount = 0;
     questions.forEach((q) => {
       if (selectedAnswers[q.id] === q.correct_answer.toLowerCase()) {
@@ -71,8 +69,6 @@ export default function QuizInterface({
     const calculatedScore = Math.round((correctCount / questions.length) * 100);
     setScore(calculatedScore);
     setShowResults(true);
-
-    // Call parent callback
     onSubmit(selectedAnswers, calculatedScore);
   };
 
@@ -85,97 +81,75 @@ export default function QuizInterface({
 
   const isAnswered = currentQuestion && selectedAnswers[currentQuestion.id];
   const allAnswered = questions.length > 0 && Object.keys(selectedAnswers).length === questions.length;
+  const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
 
   if (questions.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-sky-200 p-8 text-center">
-        <p className="text-gray-600">Tidak ada pertanyaan kuis tersedia</p>
-        <button
-          onClick={onCancel}
-          className="mt-4 px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700"
-        >
-          Kembali
-        </button>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-50 to-white p-4">
+        <div className="card max-w-md w-full text-center animate-slide-up">
+          <div className="text-6xl mb-4">📭</div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Tidak Ada Kuis</h2>
+          <p className="text-slate-600 mb-6">Tidak ada pertanyaan kuis yang tersedia untuk e-book ini.</p>
+          <button onClick={onCancel} className="btn-primary w-full">
+            ← Kembali
+          </button>
+        </div>
       </div>
     );
   }
 
   if (showResults) {
-    const correctCount = Object.keys(selectedAnswers).length;
-    const percentage = Math.round((correctCount / questions.length) * 100);
+    const correctAnswers = questions.filter(
+      (q) => selectedAnswers[q.id] === q.correct_answer.toLowerCase()
+    ).length;
+
+    const resultIcon = score >= 80 ? '🎉' : score >= 60 ? '👏' : '💪';
+    const resultMessage =
+      score >= 80
+        ? 'Luar Biasa! Kamu menguasai materi ini!'
+        : score >= 60
+        ? 'Bagus! Terus tingkatkan pengetahuanmu'
+        : 'Ayo coba lagi untuk hasil yang lebih baik';
 
     return (
-      <div className="bg-white rounded-lg border border-sky-200 p-8 max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Hasil Kuis</h2>
-          <p className="text-gray-600 mb-4">{ebookTitle}</p>
-        </div>
-
-        <div className="bg-sky-50 rounded-lg p-8 mb-8 text-center">
-          <div className="text-6xl font-bold text-sky-600 mb-4">{score}%</div>
-          <div className="text-xl text-gray-700 mb-2">
-            Jawab Benar: <span className="font-bold">{correctCount}</span> dari{' '}
-            <span className="font-bold">{questions.length}</span>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-50 to-white p-4">
+        <div className="card max-w-md w-full animate-slide-up">
+          {/* Score Display */}
+          <div className="text-center mb-6">
+            <div className="text-7xl mb-4">{resultIcon}</div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Hasil Kuismu</h2>
+            <div className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-4 rounded-xl font-bold text-5xl my-4">
+              {score}%
+            </div>
+            <p className="text-lg text-slate-600 mt-4">{resultMessage}</p>
           </div>
-          <p className="text-gray-600 mt-4">
-            {score >= 80
-              ? '🎉 Sempurna! Kamu menguasai materi dengan baik!'
-              : score >= 60
-                ? '👍 Bagus! Terus tingkatkan pemahaman kamu.'
-                : '💪 Baik, coba pelajari ulang materi dan coba lagi.'}
-          </p>
-        </div>
 
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={handleTakeAgain}
-            className="px-6 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 font-medium"
-          >
-            Coba Lagi
-          </button>
-          <button
-            onClick={onCancel}
-            className="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 font-medium"
-          >
-            Selesai
-          </button>
-        </div>
+          {/* Stats */}
+          <div className="bg-slate-50 rounded-lg p-4 mb-6 space-y-3">
+            <div className="flex justify-between">
+              <span className="text-slate-600 font-semibold">Jawaban Benar:</span>
+              <span className="text-primary-600 font-bold">{correctAnswers}/{questions.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-600 font-semibold">Akurasi:</span>
+              <span className="text-accent-600 font-bold">{Math.round((correctAnswers / questions.length) * 100)}%</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 transition-all duration-300"
+                style={{ width: `${(correctAnswers / questions.length) * 100}%` }}
+              />
+            </div>
+          </div>
 
-        {/* Detail Jawaban */}
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Detail Jawaban</h3>
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {questions.map((q, idx) => {
-              const userAnswer = selectedAnswers[q.id];
-              const isCorrect = userAnswer === q.correct_answer.toLowerCase();
-
-              return (
-                <div
-                  key={q.id}
-                  className={`p-4 rounded border-l-4 ${
-                    isCorrect
-                      ? 'bg-green-50 border-green-500'
-                      : 'bg-red-50 border-red-500'
-                  }`}
-                >
-                  <p className="font-medium text-gray-800 mb-2">
-                    {idx + 1}. {q.question_text}
-                  </p>
-                  <p
-                    className={`text-sm ${
-                      isCorrect ? 'text-green-700' : 'text-red-700'
-                    }`}
-                  >
-                    {isCorrect ? '✓ Benar' : '✗ Salah'} - Jawaban kamu: {userAnswer?.toUpperCase()}
-                  </p>
-                  {!isCorrect && (
-                    <p className="text-sm text-green-700 mt-1">
-                      Jawaban yang benar: {q.correct_answer.toUpperCase()}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+          {/* Buttons */}
+          <div className="flex flex-col gap-3">
+            <button onClick={handleTakeAgain} className="btn-primary w-full">
+              🔄 Coba Lagi
+            </button>
+            <button onClick={onCancel} className="btn-secondary w-full">
+              ← Kembali
+            </button>
           </div>
         </div>
       </div>
@@ -183,122 +157,114 @@ export default function QuizInterface({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-sky-200 p-8 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white flex flex-col">
       {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Kuis</h2>
-        <p className="text-gray-600">{ebookTitle}</p>
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-sm text-gray-600">
-            Pertanyaan {currentIndex + 1} dari {questions.length}
-          </span>
-          <div className="flex-1 mx-4 h-2 bg-gray-200 rounded-full overflow-hidden">
+      <header className="bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 sm:px-6 py-4 shadow-lg sticky top-0 z-20">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">Kuis: {ebookTitle}</h1>
+          <div className="w-full bg-primary-500 rounded-full h-2 overflow-hidden">
             <div
-              className="h-full bg-sky-600 transition-all duration-300"
-              style={{
-                width: `${((currentIndex + 1) / questions.length) * 100}%`,
-              }}
+              className="bg-white h-2 transition-all duration-300"
+              style={{ width: `${progress}%` }}
             />
           </div>
+          <p className="text-sm text-primary-100 mt-2">
+            Soal {currentIndex + 1} dari {questions.length}
+          </p>
         </div>
-      </div>
+      </header>
 
-      {/* Question */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6">
-          {currentQuestion?.question_text}
-        </h3>
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8">
+        <div className="w-full max-w-3xl animate-slide-up">
+          {/* Question Card */}
+          <div className="card mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 leading-relaxed">
+              {currentQuestion?.question_text}
+            </h2>
 
-        {/* Options */}
-        <div className="space-y-3">
-          {options.map(({ key, label }) => (
-            <label
-              key={key}
-              className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                selectedAnswers[currentQuestion.id] === key
-                  ? 'border-sky-600 bg-sky-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+            {/* Options */}
+            <div className="space-y-3">
+              {options.map((option) => (
+                <button
+                  key={option.key}
+                  onClick={() => handleSelectAnswer(option.key)}
+                  className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 font-semibold ${
+                    selectedAnswers[currentQuestion?.id] === option.key
+                      ? 'border-primary-600 bg-primary-50 text-primary-900'
+                      : 'border-slate-200 bg-white text-slate-900 hover:border-primary-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold ${
+                        selectedAnswers[currentQuestion?.id] === option.key
+                          ? 'border-primary-600 bg-primary-600 text-white'
+                          : 'border-slate-300'
+                      }`}
+                    >
+                      {String.fromCharCode(65 + ['a', 'b', 'c', 'd'].indexOf(option.key))}
+                    </div>
+                    <span>{option.label}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Info */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                💡 <span className="font-semibold">Petunjuk:</span> Pilih satu jawaban terbaik dari opsi yang tersedia.
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-3 justify-between items-center">
+            <button
+              onClick={handlePreviousQuestion}
+              disabled={currentIndex === 0}
+              className="btn-secondary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <input
-                type="radio"
-                name={`question-${currentQuestion.id}`}
-                value={key}
-                checked={selectedAnswers[currentQuestion.id] === key}
-                onChange={() => handleSelectAnswer(key)}
-                className="w-4 h-4 text-sky-600 cursor-pointer"
-              />
-              <span className="ml-3 text-gray-700">
-                <span className="font-semibold mr-2">{key.toUpperCase()}.</span>
-                {label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
+              ← Sebelumnya
+            </button>
 
-      {/* Navigation */}
-      <div className="flex gap-3 justify-between">
+            <div className="text-center">
+              <p className="text-sm text-slate-600 font-medium">
+                {Object.keys(selectedAnswers).length}/{questions.length} Terjawab
+              </p>
+            </div>
+
+            {currentIndex === questions.length - 1 ? (
+              <button
+                onClick={handleSubmitQuiz}
+                disabled={!allAnswered}
+                className="btn-success px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Selesai ✓
+              </button>
+            ) : (
+              <button
+                onClick={handleNextQuestion}
+                disabled={!isAnswered}
+                className="btn-primary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Selanjutnya →
+              </button>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 px-4 sm:px-6 py-4 text-center">
         <button
-          onClick={handlePreviousQuestion}
-          disabled={currentIndex === 0}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-medium"
+          onClick={onCancel}
+          className="btn-ghost text-slate-600 hover:text-slate-700"
         >
-          ← Sebelumnya
+          ✕ Batal Kuis
         </button>
-
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-medium"
-          >
-            Batalkan
-          </button>
-
-          {currentIndex < questions.length - 1 ? (
-            <button
-              onClick={handleNextQuestion}
-              disabled={!isAnswered}
-              className="px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 disabled:bg-sky-300 disabled:cursor-not-allowed font-medium"
-            >
-              Selanjutnya →
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmitQuiz}
-              disabled={!allAnswered}
-              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-green-300 disabled:cursor-not-allowed font-medium"
-            >
-              Selesai Kuis
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Question Indicators */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <p className="text-sm text-gray-600 mb-3">Navigasi Cepat:</p>
-        <div className="flex flex-wrap gap-2">
-          {questions.map((q, idx) => (
-            <button
-              key={q.id}
-              onClick={() => setCurrentIndex(idx)}
-              className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
-                idx === currentIndex
-                  ? 'bg-sky-600 text-white'
-                  : selectedAnswers[q.id]
-                    ? 'bg-green-200 text-green-800 hover:bg-green-300'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {idx + 1}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          🟩 = Sudah dijawab | 🟦 = Pertanyaan aktif | ⬜ = Belum dijawab
-        </p>
-      </div>
+      </footer>
     </div>
   );
 }

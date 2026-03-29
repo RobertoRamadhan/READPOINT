@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 interface User {
   id: number;
@@ -21,29 +21,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Load user from localStorage on mount
-    const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-
-    console.log('[AuthContext] Initializing:', { savedUser, token });
-
-    if (savedUser && token) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        console.log('[AuthContext] User loaded from storage:', parsedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('[AuthContext] Failed to parse user:', error);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      if (savedUser && token) {
+        try {
+          return JSON.parse(savedUser);
+        } catch (error) {
+          console.error('[AuthContext] Failed to parse user:', error);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          return null;
+        }
       }
     }
-    setLoading(false);
-  }, []);
+    return null;
+  });
+  const [loading] = useState(false);
 
   const login = (newUser: User, token: string) => {
     console.log('[AuthContext] Logging in user:', newUser);
