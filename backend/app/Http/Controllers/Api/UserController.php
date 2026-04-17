@@ -80,7 +80,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $id,
-            'grade_level' => 'sometimes|in:7,8,9',
+            'grade_level' => 'sometimes|in:1,2,3',
             'class_name' => 'sometimes|string|max:100',
             'role' => 'sometimes|in:siswa,guru,admin',
         ]);
@@ -123,7 +123,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
             'role' => 'required|in:siswa,guru,admin',
-            'grade_level' => 'required_if:role,siswa|in:7,8,9',
+            'grade_level' => 'required_if:role,siswa|in:1,2,3',
             'class_name' => 'nullable|string|max:100',
         ]);
 

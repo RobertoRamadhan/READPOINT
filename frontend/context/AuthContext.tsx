@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 interface User {
   id: number;
@@ -11,7 +12,7 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
+ user: User | null;
   loading: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
@@ -21,24 +22,47 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
-      if (savedUser && token) {
-        try {
-          return JSON.parse(savedUser);
-        } catch (error) {
-          console.error('[AuthContext] Failed to parse user:', error);
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-          return null;
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Initialize user from localStorage and validate token
+  useEffect(() => {
+    const initializeAuth = async () => {
+      if (typeof window !== 'undefined') {
+        const savedUser = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+
+        if (savedUser && token) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            
+            // Verify token is still valid by making a role-appropriate request
+            try {
+              if (parsedUser.role === 'siswa') {
+                await api.dashboard.siswaStats();
+              } else if (parsedUser.role === 'guru') {
+                await api.dashboard.guruStats();
+              } else if (parsedUser.role === 'admin') {
+                await api.dashboard.adminStats();
+              }
+              console.log('[AuthContext] Token validated for', parsedUser.role);
+            } catch (error) {
+              console.warn('[AuthContext] Token validation failed, clearing auth:', error);
+              logout();
+            }
+          } catch (error) {
+            console.error('[AuthContext] Failed to parse user:', error);
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+          }
         }
       }
-    }
-    return null;
-  });
-  const [loading] = useState(false);
+      setLoading(false);
+    };
+
+    initializeAuth();
+  }, []);
 
   const login = (newUser: User, token: string) => {
     console.log('[AuthContext] Logging in user:', newUser);
@@ -52,6 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    
+    // Call API logout for server-side session cleanup
+    api.logout().catch(error => {
+      console.warn('[AuthContext] API logout failed:', error);
+    });
   };
 
   return (

@@ -91,70 +91,91 @@ class RewardController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $reward = Reward::findOrFail($rewardId);
         $user = $request->user();
-        $totalPointsNeeded = $reward->points_required * $validated['quantity'];
+        $reward = Reward::findOrFail($rewardId);
 
-        // Get user's current points
-        $userPoints = PointTransaction::where('user_id', $user->id)
-            ->sum('points');
+        try {
+            // Use database transaction to prevent race conditions
+            $redemption = \DB::transaction(function () use ($user, $reward, $validated, $request) {
+                // Lock the user for points calculation (pessimistic lock)
+                $lockedUser = User::lockForUpdate()->find($user->id);
+                
+                // Lock the reward for stock calculation
+                $lockedReward = Reward::lockForUpdate()->find($reward->id);
 
-        // Check if user has enough points
-        if ($userPoints < $totalPointsNeeded) {
+                // Calculate total points needed
+                $totalPointsNeeded = $lockedReward->points_required * $validated['quantity'];
+
+                // Get user points with lock
+                $userPoints = PointTransaction::where('user_id', $lockedUser->id)
+                    ->sum('points');
+
+                // Check if user has enough points
+                if ($userPoints < $totalPointsNeeded) {
+                    throw new \Exception('Insufficient points: Required ' . $totalPointsNeeded . ', Available ' . $userPoints, 402);
+                }
+
+                // Check stock
+                if ($lockedReward->stock < $validated['quantity']) {
+                    throw new \Exception('Insufficient stock: Available ' . $lockedReward->stock . ', Requested ' . $validated['quantity'], 400);
+                }
+
+                // Generate unique claim code
+                $claimCode = 'CLAIM-' . strtoupper(\Illuminate\Support\Str::random(8)) . '-' . $lockedReward->id;
+
+                // Create redemption record
+                $redemption = Redemption::create([
+                    'user_id' => $lockedUser->id,
+                    'reward_id' => $lockedReward->id,
+                    'quantity' => $validated['quantity'],
+                    'points_used' => $totalPointsNeeded,
+                    'claim_code' => $claimCode,
+                    'status' => 'pending', // Pending pickup at library/admin
+                    'claimed_at' => null,
+                ]);
+
+                // Deduct points
+                PointTransaction::create([
+                    'user_id' => $lockedUser->id,
+                    'redemption_id' => $redemption->id,
+                    'points' => -$totalPointsNeeded,
+                    'type' => 'reward_redemption',
+                    'description' => "Penukaran reward '{$lockedReward->name}' (x{$validated['quantity']})",
+                ]);
+
+                // Update reward stock
+                $lockedReward->decrement('stock', $validated['quantity']);
+
+                return $redemption;
+            });
+
             return response()->json([
-                'message' => 'Insufficient points',
-                'required_points' => $totalPointsNeeded,
-                'user_points' => $userPoints,
-            ], 402);
-        }
+                'message' => 'Reward redeemed successfully',
+                'redemption' => [
+                    'id' => $redemption->id,
+                    'claim_code' => $redemption->claim_code,
+                    'reward_name' => $reward->name,
+                    'quantity' => $validated['quantity'],
+                    'points_used' => $redemption->points_used,
+                    'status' => 'pending',
+                    'instructions' => 'Tunjukkan kode klaim ini ke perpustakaan untuk mengambil hadiah Anda',
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            // Check if it's our custom exception with HTTP code
+            if ($e->getCode() >= 400 && $e->getCode() < 500) {
+                $statusCode = $e->getCode();
+                $message = $e->getMessage();
+            } else {
+                $statusCode = 500;
+                $message = 'Failed to process reward redemption: ' . $e->getMessage();
+            }
 
-        // Check stock
-        if ($reward->stock < $validated['quantity']) {
             return response()->json([
-                'message' => 'Insufficient stock',
-                'available_stock' => $reward->stock,
-                'requested_quantity' => $validated['quantity'],
-            ], 400);
+                'message' => $message,
+                'error' => true,
+            ], $statusCode);
         }
-
-        // Generate unique claim code
-        $claimCode = 'CLAIM-' . strtoupper(Str::random(8)) . '-' . $reward->id;
-
-        // Create redemption record
-        $redemption = Redemption::create([
-            'user_id' => $user->id,
-            'reward_id' => $rewardId,
-            'quantity' => $validated['quantity'],
-            'points_used' => $totalPointsNeeded,
-            'claim_code' => $claimCode,
-            'status' => 'pending', // Pending pickup at library/admin
-            'claimed_at' => null,
-        ]);
-
-        // Deduct points
-        PointTransaction::create([
-            'user_id' => $user->id,
-            'redemption_id' => $redemption->id,
-            'points' => -$totalPointsNeeded,
-            'type' => 'reward_redemption',
-            'description' => "Penukaran reward '{$reward->name}' (x{$validated['quantity']})",
-        ]);
-
-        // Update reward stock
-        $reward->decrement('stock', $validated['quantity']);
-
-        return response()->json([
-            'message' => 'Reward redeemed successfully',
-            'redemption' => [
-                'id' => $redemption->id,
-                'claim_code' => $claimCode,
-                'reward_name' => $reward->name,
-                'quantity' => $validated['quantity'],
-                'points_used' => $totalPointsNeeded,
-                'status' => 'pending',
-                'instructions' => 'Tunjukkan kode klaim ini ke perpustakaan untuk mengambil hadiah Anda',
-            ],
-        ], 201);
     }
 
     // Get redemption history 

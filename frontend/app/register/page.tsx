@@ -12,7 +12,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     password_confirmation: '',
-    role: 'siswa',
+    role: 'siswa', // Fixed: hanya siswa yang bisa self-register
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -112,23 +112,6 @@ export default function RegisterPage() {
                 disabled={loading}
                 required
               />
-            </div>
-
-            {/* Role Select */}
-            <div>
-              <label className="form-label">🎯 Peran / Role</label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="form-input"
-                disabled={loading}
-                required
-              >
-                <option value="siswa">👨‍🎓 Siswa (Pelajar)</option>
-                <option value="guru">👨‍🏫 Guru (Pengajar)</option>
-                <option value="admin">⚙️ Admin (Pengelola)</option>
-              </select>
             </div>
 
             {/* Password Input */}

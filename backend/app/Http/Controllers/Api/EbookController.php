@@ -59,36 +59,43 @@ class EbookController extends Controller
             'pages' => 'required|integer|min:1',
             'poin_per_halaman' => 'required|integer|min:1',
             'category' => 'required|string',
-            'grade_level' => 'required|in:sd,smp',
+            'grade_level' => 'required|in:1,2,3,all',
             'pdf_file' => 'required|file|mimes:pdf|max:50000', // max 50MB
             'cover_image' => 'nullable|image|mimes:jpg,jpeg,png|max:5000',
         ]);
 
-        // Store PDF
-        $pdfPath = $request->file('pdf_file')->store('ebooks/pdfs', 'public');
+        try {
+            // Store PDF to storage/app/public (accessible via /storage route)
+            $pdfPath = $request->file('pdf_file')->store('ebooks/pdfs', 'public');
 
-        // Store cover image jika ada
-        $coverPath = null;
-        if ($request->hasFile('cover_image')) {
-            $coverPath = $request->file('cover_image')->store('ebooks/covers', 'public');
+            // Store cover image jika ada
+            $coverPath = null;
+            if ($request->hasFile('cover_image')) {
+                $coverPath = $request->file('cover_image')->store('ebooks/covers', 'public');
+            }
+
+            $ebook = Ebook::create([
+                'title' => $validated['title'],
+                'author' => $validated['author'],
+                'pages' => $validated['pages'],
+                'poin_per_halaman' => $validated['poin_per_halaman'],
+                'category' => $validated['category'],
+                'grade_level' => $validated['grade_level'],
+                'file_path' => $pdfPath,
+                'cover_image' => $coverPath,
+                'is_active' => true,
+            ]);
+
+            return response()->json([
+                'message' => 'E-book uploaded successfully',
+                'data' => $ebook,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to upload e-book',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $ebook = Ebook::create([
-            'title' => $validated['title'],
-            'author' => $validated['author'],
-            'pages' => $validated['pages'],
-            'poin_per_halaman' => $validated['poin_per_halaman'],
-            'category' => $validated['category'],
-            'grade_level' => $validated['grade_level'],
-            'file_path' => $pdfPath,
-            'cover_image' => $coverPath,
-            'is_active' => true,
-        ]);
-
-        return response()->json([
-            'message' => 'E-book uploaded successfully',
-            'data' => $ebook,
-        ], 201);
     }
 
     // Admin: Update e-book metadata

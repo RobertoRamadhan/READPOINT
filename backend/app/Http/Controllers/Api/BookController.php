@@ -60,7 +60,7 @@ class BookController extends Controller
             'published_year' => 'nullable|integer|min:1900|max:' . date('Y'),
             'pages' => 'required|integer|min:1',
             'genre' => 'required|string',
-            'grade_level' => 'required|in:sd,smp,sma',
+            'grade_level' => 'required|in:1,2,3,all',
             'description' => 'nullable|string',
             'cover_image_url' => 'nullable|url',
         ]);

@@ -22,10 +22,23 @@ class Ebook extends Model
         'is_active' => 'boolean',
     ];
 
-    public function book()
+    // Get full URL for file access
+    public function getFileUrlAttribute()
     {
-        return $this->belongsTo(Book::class);
+        return $this->file_path ? asset('storage/' . $this->file_path) : null;
     }
+
+    public function getCoverUrlAttribute()
+    {
+        return $this->cover_image ? asset('storage/' . $this->cover_image) : null;
+    }
+
+    // Note: book() relationship is currently not used as there's no book_id foreign key
+    // This relationship can be added if needed in future with a migration
+    // public function book()
+    // {
+    //     return $this->belongsTo(Book::class);
+    // }
 
     public function readingActivities()
     {

@@ -85,13 +85,12 @@ export default function QuizInterface({
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-50 to-white p-4">
-        <div className="card max-w-md w-full text-center animate-slide-up">
-          <div className="text-6xl mb-4">📭</div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Tidak Ada Kuis</h2>
-          <p className="text-slate-600 mb-6">Tidak ada pertanyaan kuis yang tersedia untuk e-book ini.</p>
-          <button onClick={onCancel} className="btn-primary w-full">
-            ← Kembali
+      <div className="min-h-screen flex items-center justify-center bg-white p-4">
+        <div className="border-2 border-black max-w-md w-full text-center p-8 bg-white">
+          <h2 className="text-2xl font-bold text-black mb-2">Tidak Ada Kuis</h2>
+          <p className="text-gray-600 mb-6">Tidak ada pertanyaan kuis yang tersedia untuk e-book ini.</p>
+          <button onClick={onCancel} className="w-full border-2 border-black bg-white text-black px-6 py-3 font-bold hover:bg-black hover:text-white transition-all">
+            Kembali
           </button>
         </div>
       </div>
@@ -103,7 +102,6 @@ export default function QuizInterface({
       (q) => selectedAnswers[q.id] === q.correct_answer.toLowerCase()
     ).length;
 
-    const resultIcon = score >= 80 ? '🎉' : score >= 60 ? '👏' : '💪';
     const resultMessage =
       score >= 80
         ? 'Luar Biasa! Kamu menguasai materi ini!'
@@ -112,43 +110,39 @@ export default function QuizInterface({
         : 'Ayo coba lagi untuk hasil yang lebih baik';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-50 to-white p-4">
-        <div className="card max-w-md w-full animate-slide-up">
-          {/* Score Display */}
+      <div className="min-h-screen flex items-center justify-center bg-white p-4">
+        <div className="border-2 border-black max-w-md w-full p-8 bg-white">
+          <h2 className="text-2xl font-bold text-black mb-6">Hasil Kuismu</h2>
           <div className="text-center mb-6">
-            <div className="text-7xl mb-4">{resultIcon}</div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Hasil Kuismu</h2>
-            <div className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-4 rounded-xl font-bold text-5xl my-4">
+            <div className="inline-block border-2 border-black text-black px-8 py-4 font-bold text-5xl mb-4">
               {score}%
             </div>
-            <p className="text-lg text-slate-600 mt-4">{resultMessage}</p>
+            <p className="text-lg text-gray-600 mt-4">{resultMessage}</p>
           </div>
 
-          {/* Stats */}
-          <div className="bg-slate-50 rounded-lg p-4 mb-6 space-y-3">
+          <div className="border-2 border-gray-300 p-4 mb-6 space-y-3 bg-gray-50">
             <div className="flex justify-between">
-              <span className="text-slate-600 font-semibold">Jawaban Benar:</span>
-              <span className="text-primary-600 font-bold">{correctAnswers}/{questions.length}</span>
+              <span className="text-gray-600 font-bold">Jawaban Benar:</span>
+              <span className="text-black font-bold">{correctAnswers}/{questions.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 font-semibold">Akurasi:</span>
-              <span className="text-accent-600 font-bold">{Math.round((correctAnswers / questions.length) * 100)}%</span>
+              <span className="text-gray-600 font-bold">Akurasi:</span>
+              <span className="text-black font-bold">{Math.round((correctAnswers / questions.length) * 100)}%</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full border-2 border-black h-4 overflow-hidden bg-white">
               <div
-                className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 transition-all duration-300"
+                className="bg-black h-4 transition-all duration-300"
                 style={{ width: `${(correctAnswers / questions.length) * 100}%` }}
               />
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex flex-col gap-3">
-            <button onClick={handleTakeAgain} className="btn-primary w-full">
-              🔄 Coba Lagi
+            <button onClick={handleTakeAgain} className="w-full border-2 border-black bg-white text-black px-6 py-3 font-bold hover:bg-black hover:text-white transition-all">
+              Coba Lagi
             </button>
-            <button onClick={onCancel} className="btn-secondary w-full">
-              ← Kembali
+            <button onClick={onCancel} className="w-full border-2 border-gray-300 bg-white text-black px-6 py-3 font-bold hover:border-black transition-all">
+              Kembali
             </button>
           </div>
         </div>
@@ -157,18 +151,18 @@ export default function QuizInterface({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 sm:px-6 py-4 shadow-lg sticky top-0 z-20">
+      <header className="border-b-2 border-black bg-white px-4 sm:px-6 py-4 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">Kuis: {ebookTitle}</h1>
-          <div className="w-full bg-primary-500 rounded-full h-2 overflow-hidden">
+          <h1 className="text-2xl font-bold text-black mb-4">Kuis: {ebookTitle}</h1>
+          <div className="w-full border-2 border-black h-4 overflow-hidden bg-white">
             <div
-              className="bg-white h-2 transition-all duration-300"
+              className="bg-black h-4 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-sm text-primary-100 mt-2">
+          <p className="text-sm text-gray-600 mt-2 font-bold">
             Soal {currentIndex + 1} dari {questions.length}
           </p>
         </div>
@@ -176,33 +170,27 @@ export default function QuizInterface({
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8">
-        <div className="w-full max-w-3xl animate-slide-up">
+        <div className="w-full max-w-3xl">
           {/* Question Card */}
-          <div className="card mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 leading-relaxed">
+          <div className="border-2 border-black mb-8 p-8 bg-white">
+            <h2 className="text-2xl font-bold text-black mb-8 leading-relaxed">
               {currentQuestion?.question_text}
             </h2>
 
             {/* Options */}
-            <div className="space-y-3">
+            <div className="space-y-3 mb-6">
               {options.map((option) => (
                 <button
                   key={option.key}
                   onClick={() => handleSelectAnswer(option.key)}
-                  className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 font-semibold ${
+                  className={`w-full p-4 text-left border-2 transition-all font-bold ${
                     selectedAnswers[currentQuestion?.id] === option.key
-                      ? 'border-primary-600 bg-primary-50 text-primary-900'
-                      : 'border-slate-200 bg-white text-slate-900 hover:border-primary-300'
+                      ? 'border-black bg-black text-white'
+                      : 'border-black bg-white text-black hover:bg-gray-100'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold ${
-                        selectedAnswers[currentQuestion?.id] === option.key
-                          ? 'border-primary-600 bg-primary-600 text-white'
-                          : 'border-slate-300'
-                      }`}
-                    >
+                    <div className="w-8 h-8 border-2 border-inherit flex items-center justify-center font-bold">
                       {String.fromCharCode(65 + ['a', 'b', 'c', 'd'].indexOf(option.key))}
                     </div>
                     <span>{option.label}</span>
@@ -212,9 +200,9 @@ export default function QuizInterface({
             </div>
 
             {/* Info */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700">
-                💡 <span className="font-semibold">Petunjuk:</span> Pilih satu jawaban terbaik dari opsi yang tersedia.
+            <div className="border-2 border-black p-4 bg-white">
+              <p className="text-sm text-gray-600 font-bold">
+                Petunjuk: Pilih satu jawaban terbaik dari opsi yang tersedia.
               </p>
             </div>
           </div>
@@ -224,13 +212,13 @@ export default function QuizInterface({
             <button
               onClick={handlePreviousQuestion}
               disabled={currentIndex === 0}
-              className="btn-secondary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="border-2 border-black bg-white text-black px-6 py-3 font-bold hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ← Sebelumnya
+              Sebelumnya
             </button>
 
             <div className="text-center">
-              <p className="text-sm text-slate-600 font-medium">
+              <p className="text-sm text-gray-600 font-bold">
                 {Object.keys(selectedAnswers).length}/{questions.length} Terjawab
               </p>
             </div>
@@ -239,17 +227,17 @@ export default function QuizInterface({
               <button
                 onClick={handleSubmitQuiz}
                 disabled={!allAnswered}
-                className="btn-success px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="border-2 border-black bg-black text-white px-6 py-3 font-bold hover:bg-white hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Selesai ✓
+                Selesai
               </button>
             ) : (
               <button
                 onClick={handleNextQuestion}
                 disabled={!isAnswered}
-                className="btn-primary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="border-2 border-black bg-black text-white px-6 py-3 font-bold hover:bg-white hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Selanjutnya →
+                Selanjutnya
               </button>
             )}
           </div>
@@ -257,12 +245,12 @@ export default function QuizInterface({
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 px-4 sm:px-6 py-4 text-center">
+      <footer className="border-t-2 border-black bg-white px-4 sm:px-6 py-4 text-center">
         <button
           onClick={onCancel}
-          className="btn-ghost text-slate-600 hover:text-slate-700"
+          className="border-2 border-gray-300 bg-white text-black px-6 py-2 font-bold hover:border-black transition-all"
         >
-          ✕ Batal Kuis
+          Batal Kuis
         </button>
       </footer>
     </div>

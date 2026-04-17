@@ -56,26 +56,26 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
   const isBookmarked = bookmarks.includes(currentPage);
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-sky-50 via-white to-cyan-50">
+    <div className="flex flex-col h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-gradient-to-r from-sky-500 via-cyan-400 to-blue-500 text-white px-4 sm:px-6 py-4 sm:py-5 shadow-xl">
+      <header className="sticky top-0 z-20 border-b-2 border-black bg-white px-4 sm:px-6 py-4 sm:py-5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg sm:text-2xl font-bold truncate animate-slideInLeft">📖 {title}</h1>
-            <p className="text-xs sm:text-sm text-sky-50 mt-1 font-medium">
-              Halaman <span className="bg-white bg-opacity-20 px-2 py-0.5 rounded">{currentPage}</span> dari <span className="bg-white bg-opacity-20 px-2 py-0.5 rounded">{totalPages}</span>
+            <h1 className="text-lg sm:text-2xl font-bold text-black truncate">{title}</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1 font-bold">
+              Halaman <span className="border-2 border-black px-2 py-0.5 bg-black text-white font-bold">{currentPage}</span> dari <span className="border-2 border-black px-2 py-0.5">{totalPages}</span>
             </p>
           </div>
           <button
             onClick={toggleBookmark}
-            className={`p-3 rounded-xl transition-all transform hover:scale-110 ${
+            className={`px-4 py-2 border-2 font-bold transition-all ${
               isBookmarked
-                ? 'bg-yellow-300 text-yellow-900 shadow-lg'
-                : 'bg-white/20 text-white hover:bg-white/30'
+                ? 'border-black bg-black text-white'
+                : 'border-black bg-white text-black hover:bg-black hover:text-white'
             }`}
             title={isBookmarked ? 'Hapus bookmark' : 'Tambah bookmark'}
           >
-            {isBookmarked ? '⭐' : '☆'}
+            {isBookmarked ? 'Bookmark' : 'Bookmark'}
           </button>
         </div>
       </header>
@@ -84,20 +84,18 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
       <div className="flex-1 overflow-auto flex items-center justify-center p-2 sm:p-4">
         {isLoading ? (
           <div className="text-center">
-            <div className="inline-block w-16 h-16 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mb-4"></div>
-            <p className="text-sky-600 font-semibold text-lg animate-pulse">Memuat halaman {currentPage}...</p>
+            <p className="text-gray-600 font-bold text-lg">Memuat halaman {currentPage}...</p>
           </div>
         ) : (
-          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden">
-            {/* PDF Placeholder with improved styling */}
-            <div className="bg-gradient-to-b from-sky-100 via-cyan-50 to-white p-6 sm:p-12 min-h-96 flex flex-col items-center justify-center">
-              <div className="text-7xl mb-6 drop-shadow-lg">📄</div>
-              <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent mb-3">Halaman {currentPage}</p>
-              <p className="text-slate-600 text-center max-w-md mb-8 leading-relaxed">
+          <div className="w-full max-w-4xl border-2 border-black bg-white overflow-hidden">
+            {/* PDF Placeholder */}
+            <div className="bg-white p-6 sm:p-12 min-h-96 flex flex-col items-center justify-center border-2 border-gray-300">
+              <p className="text-2xl sm:text-3xl font-bold text-black mb-3">Halaman {currentPage}</p>
+              <p className="text-gray-600 text-center max-w-md mb-8 leading-relaxed font-bold">
                 Konten PDF akan ditampilkan di sini dengan library PDF.js untuk rendering yang optimal dan pengalaman membaca terbaik.
               </p>
-              <div className="mt-6 p-6 bg-gradient-to-br from-sky-50 to-cyan-50 rounded-xl w-full sm:max-w-md border border-sky-200">
-                <p className="text-sm text-slate-700 leading-relaxed font-medium">
+              <div className="mt-6 p-6 border-2 border-black w-full sm:max-w-md bg-white">
+                <p className="text-sm text-gray-700 leading-relaxed font-bold">
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.
                 </p>
               </div>
@@ -107,38 +105,36 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
       </div>
 
       {/* Footer Controls */}
-      <footer className="bg-white/80 backdrop-blur-md border-t-2 border-sky-100 px-4 sm:px-6 py-4 sm:py-6 shadow-xl">
+      <footer className="border-t-2 border-black bg-white px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto space-y-4">
           {/* Progress Bar */}
           <div className="space-y-2">
-            <div className="w-full bg-sky-100 rounded-full h-3 overflow-hidden shadow-sm">
+            <div className="w-full border-2 border-black h-4 overflow-hidden bg-white">
               <div
-                className="bg-gradient-to-r from-sky-500 to-cyan-400 h-3 rounded-full transition-all duration-300 shadow-sm"
+                className="bg-black h-4 transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
             <div className="flex justify-between items-center">
-              <p className="text-xs sm:text-sm text-slate-600 font-medium">{progress}% Selesai</p>
-              <p className="text-xs sm:text-sm text-slate-500">
-                {currentPage === totalPages ? (
-                  <span className="text-green-600 font-semibold">✓ Buku Selesai!</span>
-                ) : null}
+              <p className="text-xs sm:text-sm text-gray-600 font-bold">{progress}% Selesai</p>
+              <p className="text-xs sm:text-sm text-gray-700 font-bold">
+                {currentPage === totalPages ? 'Buku Selesai!' : ''}
               </p>
             </div>
           </div>
 
           {/* Page Input */}
           <div className="flex items-center gap-2 sm:gap-3 justify-center">
-            <label className="text-sm font-semibold text-slate-700 hidden sm:block">Ke halaman:</label>
+            <label className="text-sm font-bold text-gray-700 hidden sm:block">Ke halaman:</label>
             <input
               type="number"
               min="1"
               max={totalPages}
               value={currentPage}
               onChange={handlePageChange}
-              className="w-20 sm:w-24 px-3 py-2.5 rounded-lg border-2 border-sky-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 focus:outline-none text-center font-semibold text-slate-700 bg-sky-50/50 transition-all"
+              className="w-20 sm:w-24 px-3 py-2 border-2 border-black focus:outline-none text-center font-bold text-black bg-white"
             />
-            <span className="text-sm font-semibold text-slate-600">/ {totalPages}</span>
+            <span className="text-sm font-bold text-gray-600">/ {totalPages}</span>
           </div>
 
           {/* Navigation Buttons */}
@@ -146,10 +142,10 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
-              className="flex-1 sm:flex-none bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold px-3 sm:px-6 py-2.5 rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 shadow-md hover:shadow-lg"
+              className="flex-1 sm:flex-none border-2 border-black bg-white text-black font-bold px-3 sm:px-6 py-3 hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="hidden sm:inline">← Sebelumnya</span>
-              <span className="sm:hidden">←</span>
+              <span className="hidden sm:inline">Sebelumnya</span>
+              <span className="sm:hidden">Prev</span>
             </button>
 
             {/* Quick page navigation */}
@@ -161,10 +157,10 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg font-semibold transition-all transform hover:scale-110 ${
+                    className={`w-10 h-10 border-2 font-bold transition-all ${
                       page === currentPage
-                        ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-lg'
-                        : 'bg-sky-50 text-slate-700 hover:bg-sky-100 border border-sky-200'
+                        ? 'bg-black text-white border-black'
+                        : 'border-black bg-white text-black hover:bg-black hover:text-white'
                     }`}
                   >
                     {page}
@@ -176,23 +172,23 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className="flex-1 sm:flex-none bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold px-3 sm:px-6 py-2.5 rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 shadow-md hover:shadow-lg"
+              className="flex-1 sm:flex-none border-2 border-black bg-white text-black font-bold px-3 sm:px-6 py-3 hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="hidden sm:inline">Selanjutnya →</span>
-              <span className="sm:hidden">→</span>
+              <span className="hidden sm:inline">Selanjutnya</span>
+              <span className="sm:hidden">Next</span>
             </button>
           </div>
 
           {/* Bookmarks Section */}
           {bookmarks.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
-              <p className="text-xs sm:text-sm font-semibold text-yellow-800 mb-2">⭐ Bookmark Anda ({bookmarks.length}):</p>
+            <div className="border-2 border-black p-3 sm:p-4 bg-white">
+              <p className="text-xs sm:text-sm font-bold text-black mb-2">Bookmark Anda ({bookmarks.length}):</p>
               <div className="flex flex-wrap gap-2">
                 {bookmarks.map(page => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className="px-2 sm:px-3 py-1 sm:py-1.5 bg-white border border-yellow-300 text-yellow-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-yellow-100 transition-all transform hover:scale-105"
+                    className="px-2 sm:px-3 py-1 sm:py-1.5 border-2 border-black text-black text-xs sm:text-sm font-bold hover:bg-black hover:text-white transition-all"
                   >
                     Hal. {page}
                   </button>

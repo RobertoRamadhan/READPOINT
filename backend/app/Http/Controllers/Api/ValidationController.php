@@ -19,12 +19,17 @@ class ValidationController extends Controller
         try {
             $guru = $request->user();
             
-            // Get pending reading activities - filter by guru's students jika perlu
+            // Get pending reading activities
             $pendingActivities = ReadingActivity::where('status', 'pending_validation')
-                ->with(['user:id,name,email,class_name', 'ebook:id,title,author,pages,poin_per_halaman'])
-                ->leftJoin('validations', 'reading_activities.id', '=', 'validations.reading_activity_id')
-                ->select('reading_activities.*')
-                ->orderBy('reading_activities.created_at', 'desc')
+                ->with([
+                    'user' => function ($query) {
+                        $query->select('id', 'name', 'email', 'class_name');
+                    },
+                    'ebook' => function ($query) {
+                        $query->select('id', 'title', 'author', 'pages', 'poin_per_halaman');
+                    },
+                ])
+                ->orderBy('created_at', 'desc')
                 ->paginate(15);
 
             return response()->json([

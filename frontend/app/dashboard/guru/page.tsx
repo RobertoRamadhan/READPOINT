@@ -12,6 +12,19 @@ interface GuruStats {
   siswa_aktif_hari_ini?: number;
 }
 
+interface ReadingActivity {
+  id: number;
+  user_id: number;
+  ebook_id: number;
+  status: string;
+  current_page: number;
+  final_page?: number;
+  duration_minutes: number;
+  notes?: string;
+  user?: { id: number; name: string; email: string; class_name?: string };
+  ebook?: { id: number; title: string; author: string; pages: number; poin_per_halaman?: number };
+}
+
 interface Student {
   id: number;
   name: string;
@@ -19,16 +32,32 @@ interface Student {
   class_name?: string;
   total_points?: number;
   books_read?: number;
+  quiz_average_score?: number;
+  quizzes_passed?: number;
+}
+
+interface QuestionForm {
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: 'a' | 'b' | 'c' | 'd';
 }
 
 export default function GuruDashboard() {
   const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('validasi');
   const [stats, setStats] = useState<GuruStats>({});
-  const [students, setStudents] = useState<Student[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && (!isAuthenticated || (user?.role !== 'guru' && user?.role !== 'admin'))) {
@@ -36,21 +65,16 @@ export default function GuruDashboard() {
     }
   }, [loading, isAuthenticated, user?.role, router]);
 
-  // Fetch guru stats and students
+  // Fetch guru stats
   useEffect(() => {
     if (isAuthenticated && (user?.role === 'guru' || user?.role === 'admin')) {
       const fetchData = async () => {
         try {
           setDataLoading(true);
-          const [statsRes, studentsRes] = await Promise.all([
-            api.dashboard.guruStats(),
-            api.dashboard.guruStudents(),
-          ]);
+          const statsRes = await api.dashboard.guruStats();
           setStats(statsRes || {});
-          setStudents(Array.isArray(studentsRes) ? studentsRes : 
-                      studentsRes?.data ? studentsRes.data : []);
         } catch (err) {
-          console.error('Error fetching data:', err);
+          console.error('Error fetching stats:', err);
           setError('Gagal memuat data');
         } finally {
           setDataLoading(false);
@@ -60,235 +84,671 @@ export default function GuruDashboard() {
     }
   }, [isAuthenticated, user?.role]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-sky-600 text-lg">Loading...</div>
-      </div>
-    );
-  }
-
-  if (user?.role !== 'guru' && user?.role !== 'admin') {
+  if (loading || !mounted || (user?.role !== 'guru' && user?.role !== 'admin')) {
     return null;
   }
 
   return (
-    <div className="w-full space-y-8 md:space-y-10 lg:space-y-12">
-      {/* Hero Header */}
-      <div className="w-full bg-gradient-to-r from-purple-500 via-pink-400 to-red-400 p-6 md:p-8 lg:p-10 shadow-lg overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-40 md:w-56 lg:w-80 h-40 md:h-56 lg:h-80 bg-white opacity-10 rounded-full -mr-10 md:-mr-20 lg:-mr-40 -mt-10 md:-mt-20 lg:-mt-40"></div>
-        <div className="absolute bottom-0 left-0 w-40 md:w-56 lg:w-80 h-40 md:h-56 lg:h-80 bg-white opacity-10 rounded-full -ml-10 md:-ml-20 lg:-ml-40 -mb-10 md:-mb-20 lg:-mb-40"></div>
-        <div className="relative z-10 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-3 lg:mb-4">Dashboard Guru</h1>
-          <p className="text-red-50 text-base md:text-lg lg:text-xl">Monitor, validasi, dan atur pembelajaran siswa Anda dengan mudah</p>
-        </div>
-      </div>
+    <div className="w-full h-full">
+      <div className="flex h-[calc(100vh-80px)] bg-gradient-to-br from-slate-50 via-sky-50 to-cyan-50">
+        {/* Hamburger Button - Mobile Only */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="md:hidden fixed top-20 left-4 z-40 p-2 bg-gradient-to-br from-sky-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
 
-      {error && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg animate-slide-up">
-          <p className="font-semibold">⚠️ Error</p>
-          <p className="text-sm mt-1">{error}</p>
-        </div>
-      )}
+        {/* Backdrop - Mobile Only */}
+        {sidebarOpen && (
+          <div className="md:hidden fixed inset-0 bg-black/50 z-30 top-20" onClick={() => setSidebarOpen(false)} />
+        )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300 rounded-lg md:rounded-xl p-4 md:p-6 lg:p-8 hover:shadow-lg hover:scale-105 transition duration-300">
-          <div className="flex items-center justify-between gap-3 md:gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-purple-600 text-xs font-bold mb-1 md:mb-2 tracking-wide">👥 TOTAL SISWA</p>
-              <p className="text-2xl sm:text-3xl md:text-4xl font-black text-purple-700 drop-shadow-sm">{stats.total_siswa || 0}</p>
-              <p className="text-xs text-purple-500 mt-1 font-semibold">Dalam kelas</p>
-            </div>
-            <div className="text-4xl md:text-5xl opacity-30 hover:opacity-100 transition-opacity shrink-0">👨‍🎓</div>
+        {/* Sidebar */}
+        <div
+          className={`fixed md:relative md:block h-[calc(100vh-80px)] w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-y-auto shadow-2xl border-r border-slate-700 z-40 transition-transform duration-300 ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
+        >
+          <div className="p-6 border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
+            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+              <span className="text-3xl">👨‍🏫</span> GURU
+            </h2>
           </div>
+
+          <nav className="p-4 space-y-2">
+            {[
+              { id: 'validasi', label: '✓ Validasi Pembacaan', emoji: '✓' },
+              { id: 'monitoring', label: '📊 Monitoring Siswa', emoji: '📊' },
+              { id: 'kuis', label: '🎯 Buat Kuis', emoji: '🎯' },
+              { id: 'siswa', label: '👥 Daftar Siswa', emoji: '👥' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setSidebarOpen(false);
+                }}
+                className={`w-full text-left px-4 py-3 font-semibold rounded-lg transition-all duration-300 ${
+                  activeTab === item.id
+                    ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-lg transform scale-105'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
         </div>
 
-        <div className="bg-gradient-to-br from-pink-50 to-pink-100 border-2 border-pink-300 rounded-lg md:rounded-xl p-4 md:p-6 lg:p-8 hover:shadow-lg hover:scale-105 transition duration-300">
-          <div className="flex items-center justify-between gap-3 md:gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-pink-600 text-xs font-bold mb-1 md:mb-2 tracking-wide">🎯 KUIS DIBUAT</p>
-              <p className="text-2xl sm:text-3xl md:text-4xl font-black text-pink-700 drop-shadow-sm">{stats.total_kuis_dibuat || 0}</p>
-              <p className="text-xs text-pink-500 mt-1 font-semibold">Total aktif</p>
-            </div>
-            <div className="text-4xl md:text-5xl opacity-30 hover:opacity-100 transition-opacity shrink-0">📝</div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-300 rounded-lg md:rounded-xl p-4 md:p-6 lg:p-8 hover:shadow-lg hover:scale-105 transition duration-300">
-          <div className="flex items-center justify-between gap-3 md:gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-amber-600 text-xs font-bold mb-1 md:mb-2 tracking-wide">⏳ VALIDASI PENDING</p>
-              <p className="text-2xl sm:text-3xl md:text-4xl font-black text-amber-700 drop-shadow-sm">{stats.validasi_pending || 0}</p>
-              <p className="text-xs text-amber-500 mt-1 font-semibold">Menunggu review</p>
-            </div>
-            <div className="text-4xl md:text-5xl opacity-30 hover:opacity-100 transition-opacity shrink-0">⌛</div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 rounded-lg md:rounded-xl p-4 md:p-6 lg:p-8 hover:shadow-lg hover:scale-105 transition duration-300">
-          <div className="flex items-center justify-between gap-3 md:gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-green-600 text-xs font-bold mb-1 md:mb-2 tracking-wide">🔥 AKTIF HARI INI</p>
-              <p className="text-2xl sm:text-3xl md:text-4xl font-black text-green-700 drop-shadow-sm">{stats.siswa_aktif_hari_ini || 0}</p>
-              <p className="text-xs text-green-500 mt-1 font-semibold">Siswa online</p>
-            </div>
-            <div className="text-4xl md:text-5xl opacity-30 hover:opacity-100 transition-opacity shrink-0">🌟</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b-2 border-slate-200 flex gap-1 overflow-x-auto bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-2 w-full">
-        {[
-          { id: 'validasi', label: '✓ Validasi Pembacaan' },
-          { id: 'monitoring', label: '📊 Monitoring' },
-          { id: 'kuis', label: '🎯 Buat Kuis' },
-          { id: 'siswa', label: '👥 Siswa Saya' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-3 md:px-5 lg:px-6 py-2 md:py-3 font-bold text-xs md:text-sm lg:text-base transition-all whitespace-nowrap rounded-lg ${
-              activeTab === tab.id
-                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg'
-                : 'text-slate-700 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Validasi Pembacaan Tab */}
-      {activeTab === 'validasi' && (
-        <div className="animate-slide-up">
-          <div className="card p-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">✓ Validasi Pembacaan</h2>
-            <p className="text-slate-600 mb-6">Review aktivitas membaca siswa yang menunggu validasi</p>
-
-            {dataLoading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                <p className="text-slate-600">Loading...</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
-                  <p className="text-blue-900 font-semibold mb-2">📌 Total Menunggu Validasi</p>
-                  <p className="text-3xl font-bold text-blue-600">{stats.validasi_pending || 0}</p>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden w-full md:w-auto">
+          <div className="flex-1 overflow-y-auto px-8 py-8">
+            {/* Header Stats */}
+            {!dataLoading && (
+              <div className="mb-8 bg-white rounded-2xl shadow-xl p-8 border border-slate-200 animate-slide-up">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <StatBox icon="👥" label="Siswa Saya" value={stats.total_siswa || 0} />
+                  <StatBox icon="🎯" label="Kuis Dibuat" value={stats.total_kuis_dibuat || 0} />
+                  <StatBox icon="⏳" label="Validasi Pending" value={stats.validasi_pending || 0} />
+                  <StatBox icon="✓" label="Aktif Hari Ini" value={stats.siswa_aktif_hari_ini || 0} />
                 </div>
-                <p className="text-slate-600 text-center py-8">
-                  Fitur validasi pembacaan akan segera diluncurkan. Anda akan bisa melihat daftar aktivitas membaca siswa yang perlu divalidasi di sini.
-                </p>
               </div>
             )}
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
+                <p className="font-bold">Error: {error}</p>
+              </div>
+            )}
+
+            {/* Tab Content */}
+            {activeTab === 'validasi' && <ValidasiTab />}
+            {activeTab === 'monitoring' && <MonitoringTab />}
+            {activeTab === 'kuis' && <QuizTab />}
+            {activeTab === 'siswa' && <StudentListTab />}
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
 
-      {/* Monitoring Tab */}
-      {activeTab === 'monitoring' && (
-        <div className="animate-slide-up">
-          <div className="card p-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">📊 Monitoring Siswa</h2>
-            <p className="text-slate-600 mb-6">Pantau progress dan statistik pembelajaran siswa Anda secara real-time</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-700 font-semibold mb-2">📈 Total Progress</p>
-                <p className="text-3xl font-bold text-blue-600">-</p>
-              </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
-                <p className="text-sm text-purple-700 font-semibold mb-2">🏆 Top Performer</p>
-                <p className="text-3xl font-bold text-purple-600">-</p>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
-                <p className="text-sm text-green-700 font-semibold mb-2">📊 Rata-rata Nilai</p>
-                <p className="text-3xl font-bold text-green-600">-</p>
-              </div>
-            </div>
+function StatBox({ icon, label, value }: any) {
+  return (
+    <div className="bg-slate-100 rounded-xl p-4 border border-slate-200 hover:bg-slate-150 transition-all">
+      <p className="text-slate-600 text-sm font-semibold">{label}</p>
+      <p className="text-3xl font-bold text-slate-900 mt-2 flex items-center gap-2">
+        {icon} {value}
+      </p>
+    </div>
+  );
+}
 
-            <p className="text-slate-600 text-center py-8">
-              Dashboard monitoring akurat akan ditampilkan di sini dengan grafik dan analytics yang lengkap.
-            </p>
-          </div>
+// ============== VALIDASI PEMBACAAN TAB ==============
+function ValidasiTab() {
+  const [data, setData] = useState<ReadingActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedActivity, setSelectedActivity] = useState<ReadingActivity | null>(null);
+  const [approvalNotes, setApprovalNotes] = useState('');
+  const [rejectionNotes, setRejectionNotes] = useState('');
+  const [error, setError] = useState('');
+  const [processingId, setProcessingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchPendingActivities();
+  }, []);
+
+  const fetchPendingActivities = async () => {
+    try {
+      setLoading(true);
+      const response = await api.validations?.getPending?.() || { data: [] };
+      setData(Array.isArray(response) ? response : response?.data || []);
+    } catch (err) {
+      setError('Gagal memuat data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (activityId: number) => {
+    try {
+      setProcessingId(activityId);
+      await api.validations?.approve?.(activityId, { notes: approvalNotes });
+      setSelectedActivity(null);
+      setApprovalNotes('');
+      fetchPendingActivities();
+    } catch (err) {
+      setError('Gagal approve aktivitas');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (activityId: number) => {
+    if (!rejectionNotes.trim()) {
+      setError('Alasan penolakan harus diisi');
+      return;
+    }
+    try {
+      setProcessingId(activityId);
+      await api.validations?.reject?.(activityId, { notes: rejectionNotes });
+      setSelectedActivity(null);
+      setRejectionNotes('');
+      fetchPendingActivities();
+    } catch (err) {
+      setError('Gagal reject aktivitas');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-slide-up">
+      <div className="card border border-slate-200 shadow-lg overflow-hidden bg-white">
+        <div className="bg-white px-6 py-4 flex items-center gap-3 border-b border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-900">✓ Validasi Pembacaan Siswa</h2>
         </div>
-      )}
 
-      {/* Buat Kuis Tab */}
-      {activeTab === 'kuis' && (
-        <div className="animate-slide-up">
-          <div className="card p-8">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">🎯 Buat & Kelola Kuis</h2>
-                <p className="text-slate-600">Buat soal kuis interaktif untuk menguji pemahaman siswa</p>
-              </div>
-              <button className="btn-primary">
-                + Kuis Baru
-              </button>
-            </div>
-
-            <p className="text-slate-600 text-center py-12">
-              Interface untuk membuat kuis akan ditampilkan di sini. Anda bisa membuat soal pilihan ganda, essay, dan jenis soal lainnya.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Siswa Saya Tab */}
-      {activeTab === 'siswa' && (
-        <div className="animate-slide-up">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6">👥 Daftar Siswa Saya</h2>
-          
-          {dataLoading ? (
-            <div className="card p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              <p className="text-slate-600">Loading daftar siswa...</p>
-            </div>
-          ) : students.length === 0 ? (
-            <div className="card p-12 text-center">
-              <p className="text-slate-600 text-lg">📭 Belum ada siswa terdaftar</p>
+        <div className="p-6 space-y-4">
+          {loading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : data.length === 0 ? (
+            <div className="text-center py-12 text-slate-600">
+              <p className="text-lg font-semibold">✓ Semua aktivitas sudah divalidasi!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {students.map((student) => (
-                <div key={student.id} className="card-hover p-6 group">
-                  <div className="flex items-start justify-between mb-4">
+            <div className="space-y-3">
+              {data.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="card border border-slate-200 hover:border-slate-400 hover:shadow-lg transition-all cursor-pointer bg-white"
+                  onClick={() => setSelectedActivity(activity)}
+                >
+                  <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-bold text-lg text-slate-800 mb-1">{student.name}</h3>
-                      <p className="text-sm text-slate-500">{student.email}</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">📖</span>
+                        <div>
+                          <p className="font-bold text-slate-900">{activity.ebook?.title}</p>
+                          <p className="text-sm text-slate-600">
+                            👤 {activity.user?.name} ({activity.user?.class_name || 'No Class'})
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-600">
+                        📄 Halaman {activity.current_page} / {activity.ebook?.pages || '?'} • ⏱️ {activity.duration_minutes} menit
+                      </p>
                     </div>
-                    <div className="text-4xl opacity-50 group-hover:opacity-100 transition-opacity">👨‍🎓</div>
+                    <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
+                      ⏳ Menunggu
+                    </span>
                   </div>
-
-                  {student.class_name && (
-                    <p className="text-sm text-slate-600 mb-4">
-                      <span className="font-semibold">Kelas:</span> {student.class_name}
-                    </p>
-                  )}
-
-                  <div className="space-y-3 pt-4 border-t border-slate-200">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600 font-medium">⭐ Total Poin</span>
-                      <span className="text-2xl font-bold gradient-text">{student.total_points || 0}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600 font-medium">📚 Buku Selesai</span>
-                      <span className="text-2xl font-bold text-blue-600">{student.books_read || 0}</span>
-                    </div>
-                  </div>
-
-                  <button className="w-full mt-4 btn-secondary">
-                    👁️ Lihat Detail
-                  </button>
                 </div>
               ))}
             </div>
           )}
+
+          {/* Detail Modal */}
+          {selectedActivity && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 max-h-screen overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold">Detail Validasi</h3>
+                  <button onClick={() => setSelectedActivity(null)} className="text-2xl">✕</button>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                    <p className="text-sm text-slate-600">📖 Buku</p>
+                    <p className="font-bold text-slate-900">{selectedActivity.ebook?.title}</p>
+                  </div>
+
+                  <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                    <p className="text-sm text-slate-600">👤 Siswa</p>
+                    <p className="font-bold text-slate-900">{selectedActivity.user?.name}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                      <p className="text-sm text-slate-600">📄 Halaman</p>
+                      <p className="font-bold text-slate-900">{selectedActivity.final_page || selectedActivity.current_page} / {selectedActivity.ebook?.pages}</p>
+                    </div>
+                    <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                      <p className="text-sm text-slate-600">⏱️ Durasi</p>
+                      <p className="font-bold text-slate-900">{selectedActivity.duration_minutes} menit</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                    <p className="text-sm text-slate-600">💭 Catatan Siswa</p>
+                    <p className="font-semibold text-slate-900">{selectedActivity.notes || '-'}</p>
+                  </div>
+                </div>
+
+                {/* Approval Section */}
+                <div className="space-y-4 border-t pt-4">
+                  <h4 className="font-bold text-lg">Keputusan Validasi</h4>
+
+                  <textarea
+                    placeholder="Catatan approval (opsional)"
+                    value={approvalNotes}
+                    onChange={(e) => setApprovalNotes(e.target.value)}
+                    className="w-full border border-emerald-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    rows={2}
+                  />
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApprove(selectedActivity.id)}
+                      disabled={processingId === selectedActivity.id}
+                      className="flex-1 bg-sky-600 text-white py-2 rounded-lg font-bold hover:bg-sky-700 transition-all disabled:opacity-50"
+                    >
+                      ✓ Approve
+                    </button>
+                    <button
+                      onClick={() => setSelectedActivity(null)}
+                      className="flex-1 bg-slate-300 text-slate-700 py-2 rounded-lg font-bold hover:bg-slate-400 transition-all"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </div>
+
+                {/* Rejection Section */}
+                <div className="space-y-4 border-t pt-4 mt-4">
+                  <textarea
+                    placeholder="Alasan penolakan (wajib diisi jika reject)"
+                    value={rejectionNotes}
+                    onChange={(e) => setRejectionNotes(e.target.value)}
+                    className="w-full border border-red-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    rows={2}
+                  />
+
+                  <button
+                    onClick={() => handleReject(selectedActivity.id)}
+                    disabled={processingId === selectedActivity.id}
+                    className="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700 transition-all disabled:opacity-50"
+                  >
+                    ✕ Tolak
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Placeholder for other tabs
+function MonitoringTab() {
+  return (
+    <div className="card border-2 border-blue-200 shadow-lg p-8 text-center animate-slide-up">
+      <p className="text-2xl font-bold text-slate-900">📊 Monitoring tab coming soon</p>
+    </div>
+  );
+}
+
+function QuizTab() {
+  const [selectedEbook, setSelectedEbook] = useState<any>(null);
+  const [ebooks, setEbooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<QuestionForm[]>([
+    { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
+    { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
+    { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
+    { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
+    { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
+  ]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    fetchEbooks();
+  }, []);
+
+  const fetchEbooks = async () => {
+    try {
+      setLoading(true);
+      const response = await api.getEbooks?.();
+      setEbooks(response?.data || []);
+    } catch (err) {
+      setError('Gagal memuat e-book');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuestionChange = (idx: number, field: string, value: string) => {
+    const newQuestions = [...questions];
+    newQuestions[idx] = { ...newQuestions[idx], [field]: value };
+    setQuestions(newQuestions);
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!selectedEbook) {
+      setError('Pilih e-book terlebih dahulu');
+      return;
+    }
+
+    const allFilled = questions.every(q => q.question && q.option_a && q.option_b && q.option_c && q.option_d);
+    if (!allFilled) {
+      setError('Semua pertanyaan dan pilihan harus diisi');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError('');
+      await api.quizzes?.create?.({
+        ebook_id: selectedEbook.id,
+        questions: questions,
+      });
+      setSuccess('✓ Kuis berhasil disimpan!');
+      setSelectedEbook(null);
+      setQuestions(Array(5).fill(null).map(() => ({ question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' })));
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Gagal menyimpan kuis');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getFilledCount = () => questions.filter(q => q.question.trim()).length;
+  const filledCount = getFilledCount();
+
+  return (
+    <div className="space-y-6 animate-slide-up">
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg text-red-700 font-semibold">
+          ❌ {error}
         </div>
       )}
+
+      {success && (
+        <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-lg text-emerald-700 font-semibold">
+          {success}
+        </div>
+      )}
+
+      <div className="card border-2 border-purple-200 shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 px-6 py-6 flex items-center gap-3">
+          <span className="text-4xl">🎯</span>
+          <div>
+            <h2 className="text-2xl font-bold text-white">Buat Kuis</h2>
+            <p className="text-purple-100 text-sm">Siapkan kuis berisi 5 pertanyaan pilihan ganda</p>
+          </div>
+        </div>
+
+        <div className="p-8 space-y-8">
+          {!selectedEbook ? (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-8 text-center">
+                <p className="text-6xl mb-4">📚</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Pilih E-Book</h3>
+                <p className="text-slate-600 mb-6">Pilih buku untuk membuat kuis baru</p>
+
+                {loading ? (
+                  <p className="text-slate-600">📦 Memuat e-book...</p>
+                ) : (
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const ebook = ebooks.find(b => b.id == parseInt(e.target.value));
+                      setSelectedEbook(ebook);
+                    }}
+                    className="w-full border-2 border-purple-300 rounded-lg px-6 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 font-semibold text-slate-900 bg-white hover:border-purple-500 transition-all"
+                  >
+                    <option value="">Pilih e-book...</option>
+                    {ebooks.map(b => (
+                      <option key={b.id} value={b.id}>{b.title} • {b.author}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Selected Book Info */}
+              <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300 rounded-xl p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-purple-600">📚 E-Book Terpilih</p>
+                    <h3 className="text-2xl font-bold text-slate-900">{selectedEbook.title}</h3>
+                    <p className="text-slate-600 mt-1">✍️ {selectedEbook.author}</p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedEbook(null)}
+                    className="px-4 py-2 bg-white border-2 border-purple-300 text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-all"
+                  >
+                    ✕ Ganti
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <p className="font-bold text-slate-900">Progres Pertanyaan</p>
+                  <p className="text-lg font-bold text-purple-600">{filledCount}/5</p>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
+                    style={{ width: `${(filledCount / 5) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Questions Form */}
+              <div className="space-y-6">
+                {questions.map((q, idx) => (
+                  <div key={idx} className="bg-gradient-to-br from-slate-50 to-purple-50 border-2 border-purple-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all">
+                    {/* Question Number and Status */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold text-lg">
+                          {idx + 1}
+                        </span>
+                        <h4 className="font-bold text-lg text-slate-900">Pertanyaan {idx + 1}</h4>
+                      </div>
+                      {q.question.trim() && (
+                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+                          ✓ Lengkap
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Question Input */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
+                        📝 Pertanyaan <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        placeholder={`Buat pertanyaan yang jelas dan menarik untuk nomor ${idx + 1}`}
+                        value={q.question}
+                        onChange={(e) => handleQuestionChange(idx, 'question', e.target.value)}
+                        className="w-full border-2 border-purple-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white placeholder-slate-400 text-slate-900 font-medium"
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* Options Input */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-bold text-slate-700 mb-3">
+                        🎯 Pilihan Jawaban <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {[
+                          { key: 'option_a', label: 'A', color: 'blue' },
+                          { key: 'option_b', label: 'B', color: 'amber' },
+                          { key: 'option_c', label: 'C', color: 'emerald' },
+                          { key: 'option_d', label: 'D', color: 'rose' },
+                        ].map(({ key, label, color }) => (
+                          <div key={key} className="flex items-center gap-2">
+                            <span className={`flex items-center justify-center w-8 h-8 bg-${color}-100 text-${color}-600 rounded-lg font-bold text-sm`}>
+                              {label}
+                            </span>
+                            <input
+                              type="text"
+                              placeholder={`Opsi ${label}`}
+                              value={q[key as keyof QuestionForm] as string}
+                              onChange={(e) => handleQuestionChange(idx, key, e.target.value)}
+                              className="flex-1 border-2 border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-slate-900"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Correct Answer */}
+                    <div className="bg-white border-2 border-purple-200 rounded-lg p-4">
+                      <label className="block text-sm font-bold text-slate-700 mb-3">
+                        ✓ Jawaban Benar <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {['a', 'b', 'c', 'd'].map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => handleQuestionChange(idx, 'correct_answer', option)}
+                            className={`py-2 px-3 rounded-lg font-bold transition-all ${
+                              q.correct_answer === option
+                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            {option.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t-2 border-purple-200">
+                <button
+                  onClick={handleSubmitQuiz}
+                  disabled={submitting || filledCount < 5}
+                  className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all ${
+                    submitting || filledCount < 5
+                      ? 'bg-slate-300 text-slate-600 cursor-not-allowed opacity-60'
+                      : 'bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:shadow-xl hover:scale-105'
+                  }`}
+                >
+                  {submitting ? '⏳ Menyimpan...' : '✓ Simpan Kuis'}
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedEbook(null);
+                    setError('');
+                  }}
+                  className="flex-1 bg-slate-200 text-slate-700 py-4 rounded-lg font-bold hover:bg-slate-300 transition-all"
+                >
+                  ✕ Batal
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudentListTab() {
+  const [data, setData] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const response = await api.dashboard.guruStudents();
+      setData(Array.isArray(response) ? response : response?.data || []);
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredData = data.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6 animate-slide-up">
+      <div className="card border-2 border-cyan-200 shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 flex items-center gap-3">
+          <span className="text-3xl">👥</span>
+          <h2 className="text-xl font-bold text-white">Daftar Siswa</h2>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <input
+            type="text"
+            placeholder="🔍 Cari siswa..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          />
+
+          {loading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-cyan-200 bg-cyan-50">
+                    <th className="px-4 py-2 text-left font-bold">Nama</th>
+                    <th className="px-4 py-2 text-center font-bold">Poin</th>
+                    <th className="px-4 py-2 text-center font-bold">Buku</th>
+                    <th className="px-4 py-2 text-center font-bold">Kuis Avg</th>
+                    <th className="px-4 py-2 text-center font-bold">Lulus</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map(student => (
+                    <tr key={student.id} className="border-b border-cyan-100 hover:bg-cyan-50 transition-all">
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-bold text-slate-900">{student.name}</p>
+                          <p className="text-xs text-slate-600">{student.email}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="font-bold text-lg text-blue-600">{student.total_points || 0}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="font-semibold">{student.books_read || 0}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="font-semibold">{(student.quiz_average_score || 0).toFixed(1)}%</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="font-semibold">{student.quizzes_passed || 0}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

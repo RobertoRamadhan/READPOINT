@@ -1,14 +1,84 @@
+// Type definitions for API requests and responses
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  role: 'siswa' | 'guru' | 'admin';
+  grade_level?: string;
+  class_name?: string;
+}
+
+interface AuthResponse {
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+  token: string;
+}
+
+interface ApiResponse<T = unknown> {
+  message?: string;
+  data?: T;
+  error?: string;
+  pagination?: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+}
+
+interface BookCreateRequest {
+  title: string;
+  author: string;
+  description?: string;
+  grade_level: string;
+}
+
+interface RewardRedeemRequest {
+  quantity?: number;
+}
+
+// CSRF token management
+async function getCsrfToken(): Promise<string> {
+  try {
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (token) return token;
+
+    // Fetch CSRF token from sanctum endpoint
+    const response = await fetch(`${API_URL.replace('/api', '')}/sanctum/csrf-cookie`, {
+      credentials: 'include',
+    });
+    
+    const newToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    return newToken || '';
+  } catch {
+    return '';
+  }
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 console.log('[API] Initialized with URL:', API_URL);
 
-export async function apiCall(endpoint: string, options: RequestInit = {}) {
+export async function apiCall(endpoint: string, options: RequestInit = {}): Promise<ApiResponse> {
   const url = `${API_URL}${endpoint}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const csrfToken = await getCsrfToken();
 
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
+    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
   };
 
   console.log(`[API] ${options.method || 'GET'} ${url}`);
@@ -23,7 +93,7 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
       },
     });
 
-    let data;
+    let data: ApiResponse;
     try {
       data = await response.json();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -35,12 +105,23 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     console.log(`[API] Response (${response.status}):`, data);
 
     if (!response.ok) {
-      throw new Error(data.message || `HTTP ${response.status}: API Error`);
+      const errorMessage = typeof data === 'object' && data.message 
+        ? data.message 
+        : `HTTP ${response.status}: API Error`;
+      
+      const error = new Error(errorMessage);
+      (error as unknown as Record<string, unknown>).status = response.status;
+      throw error;
     }
 
     return data;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Network error or server is unreachable';
+    let errorMessage = 'Network error or server is unreachable';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     console.error('[API] Error:', errorMessage);
     throw new Error(errorMessage);
   }
@@ -48,162 +129,261 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
 
 export const api = {
   // Auth
-  login: (email: string, password: string) =>
+  login: (data: LoginRequest): Promise<ApiResponse<AuthResponse>> =>
     apiCall('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
-  logout: () => apiCall('/auth/logout', { method: 'POST' }),
-  register: (data: unknown) =>
+      body: JSON.stringify(data),
+    }) as Promise<ApiResponse<AuthResponse>>,
+
+  logout: (): Promise<ApiResponse> =>
+    apiCall('/auth/logout', { method: 'POST' }),
+
+  register: (data: RegisterRequest): Promise<ApiResponse<AuthResponse>> =>
     apiCall('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    }) as Promise<ApiResponse<AuthResponse>>,
 
   // Books
-  getBooks: () => apiCall('/books'),
-  getBook: (id: number) => apiCall(`/books/${id}`),
-  createBook: (data: unknown) =>
+  getBooks: (): Promise<ApiResponse> => apiCall('/books'),
+  getBook: (id: number): Promise<ApiResponse> => apiCall(`/books/${id}`),
+  createBook: (data: BookCreateRequest): Promise<ApiResponse> =>
     apiCall('/books', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   // E-Books
-  getEbooks: () => apiCall('/ebooks'),
-  getEbook: (id: number) => apiCall(`/ebooks/${id}`),
-  createEbook: (data: FormData) =>
-    fetch(`${API_URL}/ebooks`, {
+  getEbooks: (): Promise<ApiResponse> => apiCall('/ebooks'),
+  getEbook: (id: number): Promise<ApiResponse> => apiCall(`/ebooks/${id}`),
+  createEbook: async (data: FormData): Promise<ApiResponse> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const csrfToken = await getCsrfToken();
+    
+    const response = await fetch(`${API_URL}/ebooks`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') : null}`,
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
       },
+      credentials: 'include',
       body: data,
-    }).then(r => r.json()),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP ${response.status}: Failed to upload ebook`);
+    }
+    return result;
+  },
 
   // Reading Progress
-  getReadingProgress: () => apiCall('/reading-progress'),
-  updateReadingProgress: (id: number, data: unknown) =>
+  getReadingProgress: (): Promise<ApiResponse> => apiCall('/reading-progress'),
+  updateReadingProgress: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
     apiCall(`/reading-progress/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   // Reading Activities
-  startReading: (ebookId: number) =>
+  startReading: (ebookId: number): Promise<ApiResponse> =>
     apiCall('/reading-activities/start', {
       method: 'POST',
       body: JSON.stringify({ ebook_id: ebookId }),
     }),
-  updateActivityProgress: (activityId: number, data: unknown) =>
+  updateActivityProgress: (activityId: number, data: Record<string, unknown>): Promise<ApiResponse> =>
     apiCall(`/reading-activities/${activityId}/progress`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-  completeReading: (activityId: number, data: unknown) =>
+  completeReading: (activityId: number, data: Record<string, unknown>): Promise<ApiResponse> =>
     apiCall(`/reading-activities/${activityId}/complete`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-  getMyActivities: () => apiCall('/reading-activities'),
+  getMyActivities: (): Promise<ApiResponse> => apiCall('/reading-activities'),
 
   // Quizzes
-  getQuizzes: (bookId: number) => apiCall(`/ebooks/${bookId}/quiz`),
-  submitQuiz: (data: unknown) =>
+  getQuizzes: (bookId: number): Promise<ApiResponse> => apiCall(`/ebooks/${bookId}/quiz`),
+  submitQuiz: (data: Record<string, unknown>): Promise<ApiResponse> =>
     apiCall('/quiz/submit', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  getMyQuizAttempts: () => apiCall('/quiz/my-attempts'),
+  getMyQuizAttempts: (): Promise<ApiResponse> => apiCall('/quiz/my-attempts'),
 
-  // Rewards
-
-  // Dashboard - Admin
+  // Dashboard
   dashboard: {
-    adminStats: () => apiCall('/dashboard/admin/stats'),
-    adminTopStudents: () => apiCall('/dashboard/admin/top-students'),
-    adminBooks: () => apiCall('/dashboard/admin/books'),
-    adminUsersStats: () => apiCall('/dashboard/admin/users-stats'),
+    adminStats: (): Promise<ApiResponse> => apiCall('/dashboard/admin/stats'),
+    adminTopStudents: (): Promise<ApiResponse> => apiCall('/dashboard/admin/top-students'),
+    adminBooks: (): Promise<ApiResponse> => apiCall('/dashboard/admin/books'),
+    adminUsersStats: (): Promise<ApiResponse> => apiCall('/dashboard/admin/users-stats'),
     
-    // Guru
-    guruStats: () => apiCall('/dashboard/guru/stats'),
-    guruStudents: () => apiCall('/dashboard/guru/students'),
+    guruStats: (): Promise<ApiResponse> => apiCall('/dashboard/guru/stats'),
+    guruStudents: (): Promise<ApiResponse> => apiCall('/dashboard/guru/students'),
     
-    // Siswa
-    siswaStats: () => apiCall('/dashboard/siswa/stats'),
-    siswaBooks: () => apiCall('/dashboard/siswa/books'),
-    siswaPointsHistory: () => apiCall('/dashboard/siswa/points-history'),
+    siswaStats: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/stats'),
+    siswaBooks: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/books'),
+    siswaPointsHistory: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/points-history'),
   },
 
-  // E-Books (Admin CRUD)
+  // E-Books Admin CRUD
   ebooks: {
-    list: () => apiCall('/ebooks'),
-    get: (id: number) => apiCall(`/ebooks/${id}`),
-    create: (data: unknown) =>
-      apiCall('/ebooks', {
+    list: (): Promise<ApiResponse> => apiCall('/ebooks'),
+    get: (id: number): Promise<ApiResponse> => apiCall(`/ebooks/${id}`),
+    create: async (data: FormData | Record<string, unknown>): Promise<ApiResponse> => {
+      if (data instanceof FormData) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const csrfToken = await getCsrfToken();
+        
+        const response = await fetch(`${API_URL}/ebooks`, {
+          method: 'POST',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+          },
+          credentials: 'include',
+          body: data,
+        });
+        
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `HTTP ${response.status}: Failed to upload ebook`);
+        }
+        return result;
+      }
+      
+      return apiCall('/ebooks', {
         method: 'POST',
         body: JSON.stringify(data),
-      }),
-    update: (id: number, data: unknown) =>
-      apiCall(`/ebooks/${id}`, {
+      });
+    },
+    update: async (id: number, data: FormData | Record<string, unknown>): Promise<ApiResponse> => {
+      if (data instanceof FormData) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const csrfToken = await getCsrfToken();
+        
+        const response = await fetch(`${API_URL}/ebooks/${id}`, {
+          method: 'POST',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+          },
+          credentials: 'include',
+          body: data,
+        });
+        
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `HTTP ${response.status}: Failed to update ebook`);
+        }
+        return result;
+      }
+      
+      return apiCall(`/ebooks/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
-      }),
-    delete: (id: number) =>
+      });
+    },
+    delete: (id: number): Promise<ApiResponse> =>
       apiCall(`/ebooks/${id}`, {
         method: 'DELETE',
       }),
   },
 
-  // Rewards (Admin CRUD)
+  // Rewards Admin CRUD
   rewards: {
-    list: () => apiCall('/rewards'),
-    get: (id: number) => apiCall(`/rewards/${id}`),
-    create: (data: unknown) =>
+    list: (): Promise<ApiResponse> => apiCall('/rewards'),
+    get: (id: number): Promise<ApiResponse> => apiCall(`/rewards/${id}`),
+    create: (data: Record<string, unknown>): Promise<ApiResponse> =>
       apiCall('/rewards', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    update: (id: number, data: unknown) =>
+    update: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
       apiCall(`/rewards/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
-    delete: (id: number) =>
+    delete: (id: number): Promise<ApiResponse> =>
       apiCall(`/rewards/${id}`, {
         method: 'DELETE',
       }),
-    redeem: (id: number, quantity: number = 1) =>
+    redeem: (id: number, options?: RewardRedeemRequest): Promise<ApiResponse> =>
       apiCall(`/rewards/${id}/redeem`, {
         method: 'POST',
-        body: JSON.stringify({ quantity }),
+        body: JSON.stringify(options || {}),
       }),
-    getMyRedemptions: () => apiCall('/my-redemptions'),
-    getUserPoints: () => apiCall('/user-points'),
+    getMyRedemptions: (): Promise<ApiResponse> => apiCall('/my-redemptions'),
+    getUserPoints: (): Promise<ApiResponse> => apiCall('/user-points'),
   },
 
-  // Users (Admin only)
+  // Users Admin
   users: {
-    getAll: (role?: string) => apiCall(`/users${role ? `?role=${role}` : ''}`),
-    get: (id: number) => apiCall(`/users/${id}`),
-    create: (data: unknown) =>
+    getAll: (role?: string): Promise<ApiResponse> => 
+      apiCall(`/users${role ? `?role=${role}` : ''}`),
+    get: (id: number): Promise<ApiResponse> => apiCall(`/users/${id}`),
+    create: (data: RegisterRequest): Promise<ApiResponse> =>
       apiCall('/users', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    update: (id: number, data: unknown) =>
+    update: (id: number, data: Partial<RegisterRequest>): Promise<ApiResponse> =>
       apiCall(`/users/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
-    delete: (id: number) =>
+    delete: (id: number): Promise<ApiResponse> =>
       apiCall(`/users/${id}`, {
         method: 'DELETE',
       }),
-    resetPassword: (id: number, password: string) =>
+    resetPassword: (id: number, password: string): Promise<ApiResponse> =>
       apiCall(`/users/${id}/reset-password`, {
         method: 'POST',
         body: JSON.stringify({ password, password_confirmation: password }),
       }),
+  },
+
+  // Validations Guru
+  validations: {
+    getPending: (): Promise<ApiResponse> => apiCall('/validations/pending'),
+    getDetail: (id: number): Promise<ApiResponse> => apiCall(`/validations/${id}`),
+    approve: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall(`/validations/${id}/approve`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    reject: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall(`/validations/${id}/reject`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    getHistory: (): Promise<ApiResponse> => apiCall('/validations/history'),
+    getStats: (): Promise<ApiResponse> => apiCall('/validations/stats'),
+  },
+
+  // Quizzes Guru & Siswa
+  quizzes: {
+    getByBook: (bookId: number): Promise<ApiResponse> => apiCall(`/ebooks/${bookId}/quiz`),
+    create: (data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall('/quiz/create', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall(`/quiz/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number): Promise<ApiResponse> =>
+      apiCall(`/quiz/${id}`, {
+        method: 'DELETE',
+      }),
+    submit: (data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall('/quiz/submit', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    getMyAttempts: (): Promise<ApiResponse> => apiCall('/quiz/my-attempts'),
   },
 };

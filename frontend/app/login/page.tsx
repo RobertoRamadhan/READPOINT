@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await api.login(email, password);
+      const response = await api.login({ email, password });
       
       if (response.user && response.token) {
         login(response.user, response.token);

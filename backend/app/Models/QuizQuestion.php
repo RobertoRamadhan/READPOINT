@@ -8,6 +8,7 @@ class QuizQuestion extends Model
 {
     protected $fillable = [
         'ebook_id',
+        'created_by',
         'question',
         'option_a',
         'option_b',
@@ -19,5 +20,10 @@ class QuizQuestion extends Model
     public function ebook()
     {
         return $this->belongsTo(Ebook::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
