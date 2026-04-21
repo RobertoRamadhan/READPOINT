@@ -26,6 +26,8 @@ interface AuthResponse {
 }
 
 interface ApiResponse<T = unknown> {
+  token: any;
+  user: any;
   message?: string;
   data?: T;
   error?: string;
@@ -99,7 +101,7 @@ export async function apiCall(endpoint: string, options: RequestInit = {}): Prom
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.warn('[API] Failed to parse JSON response');
-      data = { message: `HTTP ${response.status}` };
+      data = { message: `HTTP ${response.status}`, token: null, user: null };
     }
 
     console.log(`[API] Response (${response.status}):`, data);

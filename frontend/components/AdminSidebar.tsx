@@ -104,7 +104,7 @@ export default function AdminSidebar({
               </button>
 
               {/* Sub Items */}
-              {hasSubItems && (
+              {hasSubItems && item.subItems && (
                 <div
                   className={`overflow-hidden transition-all duration-300 ${
                     isExpanded ? 'max-h-96' : 'max-h-0'

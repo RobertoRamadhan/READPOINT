@@ -44,7 +44,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await api.register(formData);
+      const response = await api.register(formData as any);
       
       if (response.user && response.token) {
         login(response.user, response.token);

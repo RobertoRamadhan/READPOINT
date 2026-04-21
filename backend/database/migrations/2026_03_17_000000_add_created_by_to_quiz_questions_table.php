@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('quiz_questions', function (Blueprint $table) {
-            $table->dropForeignIdFor('users', 'created_by');
+            $table->dropConstrainedForeignId('created_by');
         });
     }
 };

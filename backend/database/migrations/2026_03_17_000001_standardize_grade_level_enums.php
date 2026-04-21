@@ -30,8 +30,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert to original enums
-        DB::statement("ALTER TABLE users MODIFY grade_level ENUM('sd', 'smp') NULLABLE");
-        DB::statement("ALTER TABLE ebooks MODIFY grade_level ENUM('sd', 'smp') DEFAULT 'smp'");
+        // Revert to original enums (only for MySQL)
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE users MODIFY grade_level ENUM('sd', 'smp') NULLABLE");
+            DB::statement("ALTER TABLE ebooks MODIFY grade_level ENUM('sd', 'smp') DEFAULT 'smp'");
+        }
+        // SQLite: no action needed
     }
 };

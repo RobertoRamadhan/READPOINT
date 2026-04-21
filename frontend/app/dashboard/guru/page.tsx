@@ -242,8 +242,8 @@ function ValidasiTab() {
   const fetchPendingActivities = async () => {
     try {
       setLoading(true);
-      const response = await api.validations?.getPending?.() || { data: [] };
-      setData(Array.isArray(response) ? response : response?.data || []);
+      const response = (await api.validations?.getPending?.()) as any;
+      setData(Array.isArray(response?.data) ? response.data : []);
     } catch (err) {
       setError('Gagal memuat data');
     } finally {
@@ -432,7 +432,7 @@ function MonitoringTab() {
 
 function QuizTab() {
   const [selectedEbook, setSelectedEbook] = useState<any>(null);
-  const [ebooks, setEbooks] = useState([]);
+  const [ebooks, setEbooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<QuestionForm[]>([
     { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
@@ -452,7 +452,7 @@ function QuizTab() {
   const fetchEbooks = async () => {
     try {
       setLoading(true);
-      const response = await api.getEbooks?.();
+      const response = (await api.getEbooks?.()) as any;
       setEbooks(response?.data || []);
     } catch (err) {
       setError('Gagal memuat e-book');
@@ -710,8 +710,8 @@ function StudentListTab() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const response = await api.dashboard.guruStudents();
-      setData(Array.isArray(response) ? response : response?.data || []);
+      const response = (await api.dashboard.guruStudents()) as any;
+      setData(Array.isArray(response?.data) ? response.data : []);
     } catch (err) {
       console.error('Error:', err);
     } finally {
