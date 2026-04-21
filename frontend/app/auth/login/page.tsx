@@ -20,12 +20,13 @@ export default function LoginPage() {
 
     try {
       console.log('[Login] Attempting login with email:', email);
-      const response = await api.login(email, password);
+      const response = await api.login({ email, password });
       console.log('[Login] Response:', response);
       
-      if (response.user && response.token) {
-        console.log('[Login] Login successful, calling login() with user:', response.user);
-        login(response.user, response.token);
+      const authData = response.data || response as any;
+      if (authData.user && authData.token) {
+        console.log('[Login] Login successful, calling login() with user:', authData.user);
+        login(authData.user, authData.token);
         console.log('[Login] Redirecting to dashboard...');
         router.push('/dashboard');
       } else {

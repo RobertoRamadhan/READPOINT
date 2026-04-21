@@ -283,9 +283,22 @@ body {
 .animation-delay-400  { animation-delay: 0.4s; }
 .animation-delay-500  { animation-delay: 0.5s; }
 .animation-delay-600  { animation-delay: 0.6s; }
+.animation-delay-700  { animation-delay: 0.7s; }
+.animation-delay-800  { animation-delay: 0.8s; }
+.animation-delay-900  { animation-delay: 0.9s; }
 .animation-delay-1000 { animation-delay: 1s; }
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-4000 { animation-delay: 4s; }
+
+/* ─── Hover Effects ─── */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
 
 /* ─── Glass Effect ─── */
 .glass-effect {

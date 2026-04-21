@@ -13,11 +13,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Update users table: change enum from 'sd', 'smp' to '1', '2', '3' (SMK grades)
-        DB::statement("ALTER TABLE users MODIFY grade_level ENUM('1', '2', '3') NULLABLE");
+        // For SQLite, ENUM doesn't exist - just ensure the columns are there
+        // For MySQL, this would modify the enum values
+        // Since the columns already exist from previous migrations, we just need to update any existing data if needed
+        // This migration is mainly for documentation and MySQL compatibility
         
-        // Update ebooks table: ensure it supports SMK grades 1, 2, 3
-        DB::statement("ALTER TABLE ebooks MODIFY grade_level ENUM('1', '2', '3', 'all') DEFAULT 'all'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE users MODIFY grade_level ENUM('1', '2', '3') NULLABLE");
+            DB::statement("ALTER TABLE ebooks MODIFY grade_level ENUM('1', '2', '3', 'all') DEFAULT 'all'");
+        }
+        // SQLite: no action needed - columns were created with TEXT type which works for any values
     }
 
     /**

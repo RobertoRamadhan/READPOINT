@@ -22,8 +22,8 @@ class UserSeeder extends Seeder
         // Create admin user
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@readpoint.com',
-            'password' => Hash::make('password123'),
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('password'),
             'role' => 'admin',
             'email_verified_at' => now(),
         ]);
@@ -31,36 +31,22 @@ class UserSeeder extends Seeder
         // Create teacher users
         User::create([
             'name' => 'Guru Budi',
-            'email' => 'guru.budi@school.com',
-            'password' => Hash::make('password123'),
+            'email' => 'gurui@gmail.com',
+            'password' => Hash::make('password'),
             'role' => 'guru',
             'email_verified_at' => now(),
         ]);
 
-        User::create([
-            'name' => 'Guru Siti',
-            'email' => 'guru.siti@school.com',
-            'password' => Hash::make('password123'),
-            'role' => 'guru',
-            'email_verified_at' => now(),
-        ]);
 
         // Create student users
         User::create([
             'name' => 'Rina Kusuma',
-            'email' => 'rina@student.com',
-            'password' => Hash::make('password123'),
+            'email' => 'rina@gmail.com',
+            'password' => Hash::make('password'),
             'role' => 'siswa',
             'email_verified_at' => now(),
         ]);
 
-        User::create([
-            'name' => 'Budi Santoso',
-            'email' => 'budi@student.com',
-            'password' => Hash::make('password123'),
-            'role' => 'siswa',
-            'email_verified_at' => now(),
-        ]);
 
         echo "Users seeded successfully!\n";
     }

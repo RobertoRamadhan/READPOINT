@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
+import AdminSidebar from '@/components/AdminSidebar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -49,7 +50,7 @@ export default function GuruDashboard() {
   const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState('validasi');
+  const [activeTab, setActiveTab] = useState('beranda');
   const [stats, setStats] = useState<GuruStats>({});
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,7 +73,7 @@ export default function GuruDashboard() {
         try {
           setDataLoading(true);
           const statsRes = await api.dashboard.guruStats();
-          setStats(statsRes || {});
+          setStats((statsRes?.data as any) || statsRes || {});
         } catch (err) {
           console.error('Error fetching stats:', err);
           setError('Gagal memuat data');
@@ -88,13 +89,27 @@ export default function GuruDashboard() {
     return null;
   }
 
+  const menuItems = [
+    { id: 'beranda', label: 'Beranda' },
+    {
+      id: 'manajemen',
+      label: 'Manajemen',
+      subItems: [
+        { id: 'validasi', label: 'Validasi Pembacaan' },
+        { id: 'kuis', label: 'Buat Kuis' },
+        { id: 'siswa', label: 'Daftar Siswa' },
+      ],
+    },
+    { id: 'laporan', label: 'Laporan' },
+    { id: 'pengaturan', label: 'Pengaturan' },
+  ];
+
   return (
-    <div className="w-full h-full">
-      <div className="flex h-[calc(100vh-80px)] bg-gradient-to-br from-slate-50 via-sky-50 to-cyan-50">
-        {/* Hamburger Button - Mobile Only */}
+    <div className="flex w-full">
+      {/* Hamburger Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="md:hidden fixed top-20 left-4 z-40 p-2 bg-gradient-to-br from-sky-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all"
+          className="fixed top-16 left-4 z-40 p-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-all md:hidden"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -103,86 +118,109 @@ export default function GuruDashboard() {
 
         {/* Backdrop - Mobile Only */}
         {sidebarOpen && (
-          <div className="md:hidden fixed inset-0 bg-black/50 z-30 top-20" onClick={() => setSidebarOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden top-14"
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
 
-        {/* Sidebar */}
-        <div
-          className={`fixed md:relative md:block h-[calc(100vh-80px)] w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-y-auto shadow-2xl border-r border-slate-700 z-40 transition-transform duration-300 ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          }`}
-        >
-          <div className="p-6 border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
-            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-              <span className="text-3xl">👨‍🏫</span> GURU
-            </h2>
-          </div>
-
-          <nav className="p-4 space-y-2">
-            {[
-              { id: 'validasi', label: '✓ Validasi Pembacaan', emoji: '✓' },
-              { id: 'monitoring', label: '📊 Monitoring Siswa', emoji: '📊' },
-              { id: 'kuis', label: '🎯 Buat Kuis', emoji: '🎯' },
-              { id: 'siswa', label: '👥 Daftar Siswa', emoji: '👥' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSidebarOpen(false);
-                }}
-                className={`w-full text-left px-4 py-3 font-semibold rounded-lg transition-all duration-300 ${
-                  activeTab === item.id
-                    ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-lg transform scale-105'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </div>
+        {/* New Sidebar Component with Dropdown */}
+        <AdminSidebar
+          activeTab={activeTab}
+          sidebarOpen={sidebarOpen}
+          onTabChange={setActiveTab}
+          onCloseSidebar={() => setSidebarOpen(false)}
+          menuItems={menuItems}
+        />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden w-full md:w-auto">
-          <div className="flex-1 overflow-y-auto px-8 py-8">
-            {/* Header Stats */}
-            {!dataLoading && (
-              <div className="mb-8 bg-white rounded-2xl shadow-xl p-8 border border-slate-200 animate-slide-up">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatBox icon="👥" label="Siswa Saya" value={stats.total_siswa || 0} />
-                  <StatBox icon="🎯" label="Kuis Dibuat" value={stats.total_kuis_dibuat || 0} />
-                  <StatBox icon="⏳" label="Validasi Pending" value={stats.validasi_pending || 0} />
-                  <StatBox icon="✓" label="Aktif Hari Ini" value={stats.siswa_aktif_hari_ini || 0} />
-                </div>
-              </div>
-            )}
-
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
+              <div className="m-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
                 <p className="font-bold">Error: {error}</p>
               </div>
             )}
 
-            {/* Tab Content */}
+            {/* Beranda Tab */}
+            {activeTab === 'beranda' && (
+              <BerandaTab stats={stats} dataLoading={dataLoading} />
+            )}
+
+            {/* Validasi Tab */}
             {activeTab === 'validasi' && <ValidasiTab />}
-            {activeTab === 'monitoring' && <MonitoringTab />}
+
+            {/* Kuis Tab */}
             {activeTab === 'kuis' && <QuizTab />}
+
+            {/* Siswa Tab */}
             {activeTab === 'siswa' && <StudentListTab />}
           </div>
         </div>
+    </div>
+  );
+}
+
+// ============== BERANDA TAB ==============
+function BerandaTab({ stats, dataLoading }: { stats: GuruStats; dataLoading: boolean }) {
+  if (dataLoading) {
+    return (
+      <div className="text-center py-12">
+        <div className="inline-block">
+          <div className="w-12 h-12 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+        <p className="text-gray-600 font-semibold mt-4">Memuat data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 space-y-8">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-lg p-10 shadow-lg animate-slide-up">
+        <h1 className="text-5xl font-bold mb-3">Welcome, Teacher</h1>
+        <p className="text-blue-100 text-lg">Manage your students, validate reading progress, and create learning quizzes</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+        <StatCard
+          title="Total Students"
+          value={stats.total_siswa || 0}
+          color="border-blue-600"
+          delay="0.1s"
+        />
+        <StatCard
+          title="Quizzes Created"
+          value={stats.total_kuis_dibuat || 0}
+          color="border-blue-500"
+          delay="0.15s"
+        />
+        <StatCard
+          title="Pending Validation"
+          value={stats.validasi_pending || 0}
+          color="border-blue-400"
+          delay="0.2s"
+        />
+        <StatCard
+          title="Students Active Today"
+          value={stats.siswa_aktif_hari_ini || 0}
+          color="border-blue-300"
+          delay="0.25s"
+        />
       </div>
     </div>
   );
 }
 
-function StatBox({ icon, label, value }: any) {
+function StatCard({ title, value, color = 'border-blue-600', delay = '0s' }: { title: string; value: number; color?: string; delay?: string }) {
   return (
-    <div className="bg-slate-100 rounded-xl p-4 border border-slate-200 hover:bg-slate-150 transition-all">
-      <p className="text-slate-600 text-sm font-semibold">{label}</p>
-      <p className="text-3xl font-bold text-slate-900 mt-2 flex items-center gap-2">
-        {icon} {value}
-      </p>
+    <div
+      className={`bg-white rounded-lg shadow-lg border-l-4 ${color} hover:shadow-xl transition-all p-6 transform hover:scale-105 animate-scale-up`}
+      style={{ animationDelay: delay }}
+    >
+      <p className="text-gray-600 text-sm font-semibold mb-2">{title}</p>
+      <p className="text-4xl font-bold text-gray-900">{value}</p>
     </div>
   );
 }
@@ -249,7 +287,7 @@ function ValidasiTab() {
     <div className="space-y-6 animate-slide-up">
       <div className="card border border-slate-200 shadow-lg overflow-hidden bg-white">
         <div className="bg-white px-6 py-4 flex items-center gap-3 border-b border-slate-200">
-          <h2 className="text-2xl font-bold text-slate-900">✓ Validasi Pembacaan Siswa</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Validasi Pembacaan Siswa</h2>
         </div>
 
         <div className="p-6 space-y-4">
@@ -257,7 +295,7 @@ function ValidasiTab() {
             <div className="text-center py-8">Loading...</div>
           ) : data.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
-              <p className="text-lg font-semibold">✓ Semua aktivitas sudah divalidasi!</p>
+              <p className="text-lg font-semibold">Semua aktivitas sudah divalidasi!</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -270,20 +308,19 @@ function ValidasiTab() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">📖</span>
                         <div>
                           <p className="font-bold text-slate-900">{activity.ebook?.title}</p>
                           <p className="text-sm text-slate-600">
-                            👤 {activity.user?.name} ({activity.user?.class_name || 'No Class'})
+                            {activity.user?.name} ({activity.user?.class_name || 'No Class'})
                           </p>
                         </div>
                       </div>
                       <p className="text-sm text-slate-600">
-                        📄 Halaman {activity.current_page} / {activity.ebook?.pages || '?'} • ⏱️ {activity.duration_minutes} menit
+                        Pages {activity.current_page} / {activity.ebook?.pages || '?'} • {activity.duration_minutes} minutes
                       </p>
                     </div>
                     <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
-                      ⏳ Menunggu
+                      Pending
                     </span>
                   </div>
                 </div>
@@ -302,18 +339,18 @@ function ValidasiTab() {
 
                 <div className="space-y-4 mb-6">
                   <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
-                    <p className="text-sm text-slate-600">📖 Buku</p>
+                    <p className="text-sm text-slate-600">Book</p>
                     <p className="font-bold text-slate-900">{selectedActivity.ebook?.title}</p>
                   </div>
 
                   <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
-                    <p className="text-sm text-slate-600">👤 Siswa</p>
+                    <p className="text-sm text-slate-600">Student</p>
                     <p className="font-bold text-slate-900">{selectedActivity.user?.name}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
-                      <p className="text-sm text-slate-600">📄 Halaman</p>
+                      <p className="text-sm text-slate-600">Pages</p>
                       <p className="font-bold text-slate-900">{selectedActivity.final_page || selectedActivity.current_page} / {selectedActivity.ebook?.pages}</p>
                     </div>
                     <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
@@ -346,7 +383,7 @@ function ValidasiTab() {
                       disabled={processingId === selectedActivity.id}
                       className="flex-1 bg-sky-600 text-white py-2 rounded-lg font-bold hover:bg-sky-700 transition-all disabled:opacity-50"
                     >
-                      ✓ Approve
+                      Approve
                     </button>
                     <button
                       onClick={() => setSelectedActivity(null)}
@@ -388,7 +425,7 @@ function ValidasiTab() {
 function MonitoringTab() {
   return (
     <div className="card border-2 border-blue-200 shadow-lg p-8 text-center animate-slide-up">
-      <p className="text-2xl font-bold text-slate-900">📊 Monitoring tab coming soon</p>
+      <p className="text-2xl font-bold text-slate-900">Monitoring tab coming soon</p>
     </div>
   );
 }
@@ -478,24 +515,22 @@ function QuizTab() {
       )}
 
       <div className="card border-2 border-purple-200 shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 px-6 py-6 flex items-center gap-3">
-          <span className="text-4xl">🎯</span>
+        <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-6 flex items-center gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-white">Buat Kuis</h2>
-            <p className="text-purple-100 text-sm">Siapkan kuis berisi 5 pertanyaan pilihan ganda</p>
+            <h2 className="text-2xl font-bold text-white">Create Quiz</h2>
+            <p className="text-purple-100 text-sm">Create a quiz with 5 multiple choice questions</p>
           </div>
         </div>
 
         <div className="p-8 space-y-8">
           {!selectedEbook ? (
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-8 text-center">
-                <p className="text-6xl mb-4">📚</p>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Pilih E-Book</h3>
-                <p className="text-slate-600 mb-6">Pilih buku untuk membuat kuis baru</p>
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-8 text-center">
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Select E-Book</h3>
+                <p className="text-slate-600 mb-6">Choose a book to create a new quiz</p>
 
                 {loading ? (
-                  <p className="text-slate-600">📦 Memuat e-book...</p>
+                  <p className="text-slate-600">Loading e-books...</p>
                 ) : (
                   <select
                     value=""
@@ -503,7 +538,7 @@ function QuizTab() {
                       const ebook = ebooks.find(b => b.id == parseInt(e.target.value));
                       setSelectedEbook(ebook);
                     }}
-                    className="w-full border-2 border-purple-300 rounded-lg px-6 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 font-semibold text-slate-900 bg-white hover:border-purple-500 transition-all"
+                    className="w-full border-2 border-blue-300 rounded-lg px-6 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-900 bg-white hover:border-blue-500 transition-all"
                   >
                     <option value="">Pilih e-book...</option>
                     {ebooks.map(b => (
@@ -516,7 +551,7 @@ function QuizTab() {
           ) : (
             <>
               {/* Selected Book Info */}
-              <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300 rounded-xl p-6">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-purple-600">📚 E-Book Terpilih</p>
@@ -525,9 +560,9 @@ function QuizTab() {
                   </div>
                   <button
                     onClick={() => setSelectedEbook(null)}
-                    className="px-4 py-2 bg-white border-2 border-purple-300 text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-all"
+                    className="px-4 py-2 bg-white border-2 border-blue-300 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all"
                   >
-                    ✕ Ganti
+                    Change
                   </button>
                 </div>
               </div>
@@ -536,11 +571,11 @@ function QuizTab() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <p className="font-bold text-slate-900">Progres Pertanyaan</p>
-                  <p className="text-lg font-bold text-purple-600">{filledCount}/5</p>
+                  <p className="text-lg font-bold text-blue-600">{filledCount}/5</p>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
+                    className="bg-blue-600 h-full transition-all duration-300"
                     style={{ width: `${(filledCount / 5) * 100}%` }}
                   />
                 </div>
@@ -549,18 +584,18 @@ function QuizTab() {
               {/* Questions Form */}
               <div className="space-y-6">
                 {questions.map((q, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-slate-50 to-purple-50 border-2 border-purple-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all">
+                  <div key={idx} className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6 hover:border-gray-400 hover:shadow-lg transition-all">
                     {/* Question Number and Status */}
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <span className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold text-lg">
+                        <span className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold text-lg">
                           {idx + 1}
                         </span>
                         <h4 className="font-bold text-lg text-slate-900">Pertanyaan {idx + 1}</h4>
                       </div>
                       {q.question.trim() && (
-                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
-                          ✓ Lengkap
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                          Complete
                         </span>
                       )}
                     </div>
@@ -568,7 +603,7 @@ function QuizTab() {
                     {/* Question Input */}
                     <div className="mb-6">
                       <label className="block text-sm font-bold text-slate-700 mb-2">
-                        📝 Pertanyaan <span className="text-red-500">*</span>
+                        Question <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         placeholder={`Buat pertanyaan yang jelas dan menarik untuk nomor ${idx + 1}`}
@@ -582,17 +617,17 @@ function QuizTab() {
                     {/* Options Input */}
                     <div className="mb-6">
                       <label className="block text-sm font-bold text-slate-700 mb-3">
-                        🎯 Pilihan Jawaban <span className="text-red-500">*</span>
+                        Answer Options <span className="text-red-500">*</span>
                       </label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {[
-                          { key: 'option_a', label: 'A', color: 'blue' },
-                          { key: 'option_b', label: 'B', color: 'amber' },
-                          { key: 'option_c', label: 'C', color: 'emerald' },
-                          { key: 'option_d', label: 'D', color: 'rose' },
-                        ].map(({ key, label, color }) => (
+                          { key: 'option_a', label: 'A' },
+                          { key: 'option_b', label: 'B' },
+                          { key: 'option_c', label: 'C' },
+                          { key: 'option_d', label: 'D' },
+                        ].map(({ key, label }) => (
                           <div key={key} className="flex items-center gap-2">
-                            <span className={`flex items-center justify-center w-8 h-8 bg-${color}-100 text-${color}-600 rounded-lg font-bold text-sm`}>
+                            <span className="flex items-center justify-center w-8 h-8 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm">
                               {label}
                             </span>
                             <input
@@ -600,7 +635,7 @@ function QuizTab() {
                               placeholder={`Opsi ${label}`}
                               value={q[key as keyof QuestionForm] as string}
                               onChange={(e) => handleQuestionChange(idx, key, e.target.value)}
-                              className="flex-1 border-2 border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-slate-900"
+                              className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-900"
                             />
                           </div>
                         ))}
@@ -608,9 +643,9 @@ function QuizTab() {
                     </div>
 
                     {/* Correct Answer */}
-                    <div className="bg-white border-2 border-purple-200 rounded-lg p-4">
+                    <div className="bg-white border-2 border-gray-300 rounded-lg p-4">
                       <label className="block text-sm font-bold text-slate-700 mb-3">
-                        ✓ Jawaban Benar <span className="text-red-500">*</span>
+                        Correct Answer <span className="text-red-500">*</span>
                       </label>
                       <div className="grid grid-cols-4 gap-2">
                         {['a', 'b', 'c', 'd'].map((option) => (
@@ -619,7 +654,7 @@ function QuizTab() {
                             onClick={() => handleQuestionChange(idx, 'correct_answer', option)}
                             className={`py-2 px-3 rounded-lg font-bold transition-all ${
                               q.correct_answer === option
-                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105'
+                                ? 'bg-blue-600 text-white shadow-lg scale-105'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                           >
@@ -633,17 +668,17 @@ function QuizTab() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t-2 border-purple-200">
+              <div className="flex gap-3 pt-4 border-t-2 border-gray-300">
                 <button
                   onClick={handleSubmitQuiz}
                   disabled={submitting || filledCount < 5}
                   className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all ${
                     submitting || filledCount < 5
                       ? 'bg-slate-300 text-slate-600 cursor-not-allowed opacity-60'
-                      : 'bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:shadow-xl hover:scale-105'
+                      : 'bg-blue-600 text-white hover:shadow-xl hover:scale-105'
                   }`}
                 >
-                  {submitting ? '⏳ Menyimpan...' : '✓ Simpan Kuis'}
+                  {submitting ? 'Saving...' : 'Save Quiz'}
                 </button>
                 <button
                   onClick={() => {
@@ -652,7 +687,7 @@ function QuizTab() {
                   }}
                   className="flex-1 bg-slate-200 text-slate-700 py-4 rounded-lg font-bold hover:bg-slate-300 transition-all"
                 >
-                  ✕ Batal
+                  Cancel
                 </button>
               </div>
             </>
@@ -692,15 +727,14 @@ function StudentListTab() {
   return (
     <div className="space-y-6 animate-slide-up">
       <div className="card border-2 border-cyan-200 shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 flex items-center gap-3">
-          <span className="text-3xl">👥</span>
-          <h2 className="text-xl font-bold text-white">Daftar Siswa</h2>
+        <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-4 flex items-center gap-3">
+          <h2 className="text-xl font-bold text-white">Student List</h2>
         </div>
 
         <div className="p-6 space-y-4">
           <input
             type="text"
-            placeholder="🔍 Cari siswa..."
+            placeholder="Search student..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"

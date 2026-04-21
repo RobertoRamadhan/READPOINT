@@ -37,42 +37,53 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 bg-gradient-to-br from-white via-blue-50 to-white">
-      {/* Decorative background */}
+    <div 
+      className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 bg-cover bg-center bg-fixed"
+      style={{
+        backgroundImage: 'url(/teknologi.jpg)',
+        backgroundSize: '100%',
+      }}
+    >
+      {/* Dark Overlay */}
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm pointer-events-none z-0"></div>
+      
+      {/* Decorative Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo Section */}
-        <div className="text-center mb-8 animate-slide-up">
-          <div className="flex justify-center mb-4">
-            <div className="text-6xl md:text-7xl animate-bounce-slow">📚</div>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">READPOINT</h1>
-          <p className="text-lg text-slate-600">Masuk ke dunia literasi digital</p>
+        {/* Header */}
+        <div className="text-center mb-12 animate-slide-up">
+          <h1 className="text-5xl font-bold text-white mb-3">Masuk</h1>
+          <p className="text-lg text-cyan-300">Lanjutkan perjalanan literasi digital Anda</p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg animate-slide-up">
-            <p className="font-semibold text-sm">⚠️ Error</p>
+          <div className="mb-8 p-4 bg-red-950 border-l-4 border-red-500 text-red-200 rounded-lg animate-slide-up">
+            <p className="font-semibold text-sm">Terjadi Kesalahan</p>
             <p className="text-sm mt-1">{error}</p>
           </div>
         )}
 
         {/* Login Card */}
-        <div className="card animate-slide-up animation-delay-100">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 md:p-10 animate-slide-up animation-delay-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300">
+          {/* Decorative Top Border */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-amber-500 rounded-t-2xl"></div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Input */}
-            <div>
-              <label className="form-label">📧 Email</label>
+            <div className="animate-slide-up animation-delay-300">
+              <label className="block text-sm font-semibold text-cyan-300 mb-3">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="form-input"
+                className="w-full px-4 py-3 border border-cyan-500/30 rounded-lg bg-slate-800/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200"
                 placeholder="nama@email.com"
                 disabled={loading}
                 required
@@ -80,77 +91,59 @@ export default function LoginPage() {
             </div>
 
             {/* Password Input */}
-            <div>
-              <label className="form-label">🔐 Password</label>
+            <div className="animate-slide-up animation-delay-400">
+              <label className="block text-sm font-semibold text-cyan-300 mb-3">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="form-input"
+                className="w-full px-4 py-3 border border-cyan-500/30 rounded-lg bg-slate-800/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200"
                 placeholder="••••••••"
                 disabled={loading}
                 required
               />
             </div>
 
-            {/* Remember & Forgot */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300" />
-                <span className="text-slate-600">Ingat saya</span>
-              </label>
-              <Link href="#" className="text-primary-600 hover:text-primary-700 font-semibold">
-                Lupa password?
-              </Link>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full mt-6 text-lg"
+              className="w-full mt-8 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold py-3 rounded-lg hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover-lift shadow-lg shadow-cyan-500/20 animate-slide-up animation-delay-500"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="spinner"></span> Loading...
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Sedang memproses...
                 </span>
               ) : (
-                <span>🚀 Login</span>
+                'Masuk'
               )}
             </button>
           </form>
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
+              <div className="w-full border-t border-cyan-500/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">atau</span>
+              <span className="px-2 bg-gradient-to-br from-slate-800/80 to-slate-900/80 text-slate-400">atau</span>
             </div>
-          </div>
-
-          {/* Social Login (Optional) */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <button className="btn-secondary" disabled={loading}>
-              Google
-            </button>
-            <button className="btn-secondary" disabled={loading}>
-              GitHub
-            </button>
           </div>
 
           {/* Register Link */}
-          <p className="text-center text-slate-600">
+          <p className="text-center text-slate-300 text-sm animate-slide-up animation-delay-600">
             Belum punya akun?{' '}
-            <Link href="/register" className="text-primary-600 hover:text-primary-700 font-bold">
+            <Link href="/register" className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors duration-200">
               Daftar di sini
             </Link>
           </p>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-slate-500 text-xs mt-6">
+        {/* Footer Text */}
+        <p className="text-center text-slate-400 text-xs mt-8 animate-slide-up animation-delay-700">
           Dengan login, Anda menyetujui Syarat Layanan kami
         </p>
       </div>

@@ -33,12 +33,13 @@ export default function RegisterPage() {
 
     try {
       console.log('[Register] Attempting registration with email:', formData.email);
-      const response = await api.register(formData);
+      const response = await api.register(formData as any);
       console.log('[Register] Response:', response);
       
-      if (response.user && response.token) {
-        console.log('[Register] Registration successful, auto-logging in user:', response.user);
-        login(response.user, response.token);
+      const authData = response.data || response as any;
+      if (authData.user && authData.token) {
+        console.log('[Register] Registration successful, auto-logging in user:', authData.user);
+        login(authData.user, authData.token);
         alert('Pendaftaran berhasil! Selamat datang di READPOINT.');
         router.push('/dashboard');
       } else {

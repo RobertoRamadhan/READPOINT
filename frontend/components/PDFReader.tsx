@@ -1,29 +1,84 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set up the worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface PDFReaderProps {
   ebookId: number;
   title: string;
-  totalPages: number;
+  pdfUrl: string;
   onProgress?: (page: number) => void;
 }
 
-export default function PDFReader({ ebookId, title, totalPages, onProgress }: PDFReaderProps) {
+export default function PDFReader({ ebookId, title, pdfUrl, onProgress }: PDFReaderProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [scale, setScale] = useState(1.5);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pdfDocRef = useRef<any>(null);
 
+  // Load PDF
   useEffect(() => {
-    // Simulate PDF loading
-    setTimeout(() => setIsLoading(false), 800);
-  }, [ebookId]);
+    const loadPdf = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+        pdfDocRef.current = pdfDoc;
+        setTotalPages(pdfDoc.numPages);
+        setCurrentPage(1);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Gagal memuat PDF');
+        console.error('PDF loading error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    if (onProgress) {
-      onProgress(currentPage);
+    if (pdfUrl) {
+      loadPdf();
     }
-  }, [currentPage, onProgress]);
+  }, [pdfUrl]);
+
+  // Render page
+  useEffect(() => {
+    const renderPage = async () => {
+      if (!pdfDocRef.current || !canvasRef.current) return;
+
+      try {
+        const page = await pdfDocRef.current.getPage(currentPage);
+        const viewport = page.getViewport({ scale });
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const renderContext = {
+          canvasContext: context!,
+          viewport: viewport,
+        };
+
+        await page.render(renderContext).promise;
+
+        if (onProgress) {
+          onProgress(currentPage);
+        }
+      } catch (err) {
+        console.error('Page render error:', err);
+      }
+    };
+
+    if (!isLoading && totalPages > 0) {
+      renderPage();
+    }
+  }, [currentPage, scale, totalPages, isLoading, onProgress]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -52,7 +107,7 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
     );
   };
 
-  const progress = Math.round((currentPage / totalPages) * 100);
+  const progress = totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
   const isBookmarked = bookmarks.includes(currentPage);
 
   return (
@@ -75,31 +130,40 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
             }`}
             title={isBookmarked ? 'Hapus bookmark' : 'Tambah bookmark'}
           >
-            {isBookmarked ? 'Bookmark' : 'Bookmark'}
+            {isBookmarked ? '⭐ Bookmark' : '☆ Bookmark'}
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto flex items-center justify-center p-2 sm:p-4">
+      <div className="flex-1 overflow-auto flex flex-col items-center justify-start p-2 sm:p-4 bg-gray-100">
+        {error && (
+          <div className="w-full max-w-4xl mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
+            <p className="font-semibold">Gagal memuat PDF:</p>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
+
         {isLoading ? (
-          <div className="text-center">
-            <p className="text-gray-600 font-bold text-lg">Memuat halaman {currentPage}...</p>
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
+              <p className="text-gray-600 font-bold text-lg">Memuat halaman {currentPage}...</p>
+            </div>
+          </div>
+        ) : totalPages === 0 ? (
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <p className="text-gray-600 font-bold text-lg">PDF tidak tersedia</p>
+            </div>
           </div>
         ) : (
-          <div className="w-full max-w-4xl border-2 border-black bg-white overflow-hidden">
-            {/* PDF Placeholder */}
-            <div className="bg-white p-6 sm:p-12 min-h-96 flex flex-col items-center justify-center border-2 border-gray-300">
-              <p className="text-2xl sm:text-3xl font-bold text-black mb-3">Halaman {currentPage}</p>
-              <p className="text-gray-600 text-center max-w-md mb-8 leading-relaxed font-bold">
-                Konten PDF akan ditampilkan di sini dengan library PDF.js untuk rendering yang optimal dan pengalaman membaca terbaik.
-              </p>
-              <div className="mt-6 p-6 border-2 border-black w-full sm:max-w-md bg-white">
-                <p className="text-sm text-gray-700 leading-relaxed font-bold">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.
-                </p>
-              </div>
-            </div>
+          <div className="bg-white shadow-lg">
+            <canvas
+              ref={canvasRef}
+              className="mx-auto"
+              style={{ maxWidth: '100%', height: 'auto' }}
+            />
           </div>
         )}
       </div>
@@ -118,9 +182,26 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
             <div className="flex justify-between items-center">
               <p className="text-xs sm:text-sm text-gray-600 font-bold">{progress}% Selesai</p>
               <p className="text-xs sm:text-sm text-gray-700 font-bold">
-                {currentPage === totalPages ? 'Buku Selesai!' : ''}
+                {currentPage === totalPages ? 'Buku Selesai! 🎉' : ''}
               </p>
             </div>
+          </div>
+
+          {/* Scale Controls */}
+          <div className="flex items-center gap-3 justify-center">
+            <button
+              onClick={() => setScale(Math.max(0.5, scale - 0.25))}
+              className="px-3 py-2 border-2 border-black bg-white text-black font-bold hover:bg-black hover:text-white transition-all"
+            >
+              −
+            </button>
+            <span className="text-sm font-bold text-gray-600">{(scale * 100).toFixed(0)}%</span>
+            <button
+              onClick={() => setScale(Math.min(3, scale + 0.25))}
+              className="px-3 py-2 border-2 border-black bg-white text-black font-bold hover:bg-black hover:text-white transition-all"
+            >
+              +
+            </button>
           </div>
 
           {/* Page Input */}
@@ -144,7 +225,7 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
               disabled={currentPage === 1}
               className="flex-1 sm:flex-none border-2 border-black bg-white text-black font-bold px-3 sm:px-6 py-3 hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="hidden sm:inline">Sebelumnya</span>
+              <span className="hidden sm:inline">← Sebelumnya</span>
               <span className="sm:hidden">Prev</span>
             </button>
 
@@ -174,14 +255,14 @@ export default function PDFReader({ ebookId, title, totalPages, onProgress }: PD
               disabled={currentPage === totalPages}
               className="flex-1 sm:flex-none border-2 border-black bg-white text-black font-bold px-3 sm:px-6 py-3 hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="hidden sm:inline">Selanjutnya</span>
+              <span className="hidden sm:inline">Selanjutnya →</span>
               <span className="sm:hidden">Next</span>
             </button>
           </div>
 
           {/* Bookmarks Section */}
           {bookmarks.length > 0 && (
-            <div className="border-2 border-black p-3 sm:p-4 bg-white">
+            <div className="border-2 border-black p-3 sm:p-4 bg-white rounded">
               <p className="text-xs sm:text-sm font-bold text-black mb-2">Bookmark Anda ({bookmarks.length}):</p>
               <div className="flex flex-wrap gap-2">
                 {bookmarks.map(page => (
