@@ -25,7 +25,7 @@ class EbookSeeder extends Seeder
                 'pages' => 529,
                 'poin_per_halaman' => 5,
                 'category' => 'Fiksi',
-                'grade_level' => 'smp',
+                'grade_level' => '2',
                 'is_active' => true,
             ],
             [
@@ -34,7 +34,7 @@ class EbookSeeder extends Seeder
                 'pages' => 309,
                 'poin_per_halaman' => 5,
                 'category' => 'Fantasi',
-                'grade_level' => 'smp',
+                'grade_level' => '2',
                 'is_active' => true,
             ],
             [
@@ -43,7 +43,7 @@ class EbookSeeder extends Seeder
                 'pages' => 415,
                 'poin_per_halaman' => 5,
                 'category' => 'Fiksi',
-                'grade_level' => 'smp',
+                'grade_level' => '2',
                 'is_active' => true,
             ],
             [
@@ -52,7 +52,7 @@ class EbookSeeder extends Seeder
                 'pages' => 45,
                 'poin_per_halaman' => 10,
                 'category' => 'Cerita Rakyat',
-                'grade_level' => 'sd',
+                'grade_level' => '1',
                 'is_active' => true,
             ],
             [
@@ -61,7 +61,7 @@ class EbookSeeder extends Seeder
                 'pages' => 78,
                 'poin_per_halaman' => 8,
                 'category' => 'Dongeng',
-                'grade_level' => 'sd',
+                'grade_level' => '1',
                 'is_active' => true,
             ],
             [
@@ -70,7 +70,7 @@ class EbookSeeder extends Seeder
                 'pages' => 488,
                 'poin_per_halaman' => 5,
                 'category' => 'Motivasi',
-                'grade_level' => 'smp',
+                'grade_level' => '2',
                 'is_active' => true,
             ],
             [
@@ -79,7 +79,7 @@ class EbookSeeder extends Seeder
                 'pages' => 200,
                 'poin_per_halaman' => 7,
                 'category' => 'Filosofi',
-                'grade_level' => 'smp',
+                'grade_level' => '3',
                 'is_active' => true,
             ],
             [
@@ -88,7 +88,7 @@ class EbookSeeder extends Seeder
                 'pages' => 370,
                 'poin_per_halaman' => 5,
                 'category' => 'Fiksi',
-                'grade_level' => 'smp',
+                'grade_level' => '2',
                 'is_active' => true,
             ],
         ];

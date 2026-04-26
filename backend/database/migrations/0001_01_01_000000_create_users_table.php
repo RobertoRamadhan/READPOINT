@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['admin', 'guru', 'siswa'])->default('siswa');
-            $table->enum('grade_level', ['sd', 'smp'])->nullable();
+            $table->enum('grade_level', ['1', '2', '3'])->nullable();
             $table->string('class_name')->nullable();
             $table->string('profile_photo_url')->nullable();
             $table->rememberToken();

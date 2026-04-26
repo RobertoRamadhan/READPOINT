@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('pages');
             $table->integer('poin_per_halaman')->default(5);
             $table->string('category');
-            $table->enum('grade_level', ['sd', 'smp'])->default('smp');
+            $table->enum('grade_level', ['1', '2', '3', 'all'])->default('all');
             $table->string('file_path')->nullable();
             $table->string('cover_image')->nullable();
             $table->boolean('is_active')->default(true);
