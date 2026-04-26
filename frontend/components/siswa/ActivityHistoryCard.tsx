@@ -42,7 +42,7 @@ export default function ActivityHistoryCard({
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-black text-gray-900 text-lg line-clamp-2">{activity.ebook_title}</h3>
-              <Badge variant={getStatusBadge(activity.status)}>
+              <Badge variant={getStatusVariant(activity.status)}>
                 {getStatusIcon(activity.status)} {activity.status.replace('_', ' ')}
               </Badge>
             </div>

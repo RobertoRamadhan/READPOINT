@@ -11,8 +11,8 @@ interface NavItem {
 }
 
 interface NavigationProps {
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
   items?: NavItem[];
 }
 
@@ -24,6 +24,8 @@ const defaultNavItems: NavItem[] = [
 ];
 
 export default function Navigation({ activeTab, onTabChange, items = defaultNavItems }: NavigationProps) {
+  const pathname = usePathname();
+  
   return (
     <nav className="w-full px-6 py-4 md:px-8">
       <div className="inline-flex gap-4 bg-gray-100 rounded-full p-1">
@@ -31,9 +33,9 @@ export default function Navigation({ activeTab, onTabChange, items = defaultNavI
           <Link
             key={item.id}
             href={item.href}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => onTabChange?.(item.id)}
             className={`px-4 py-3 rounded-full font-medium transition-all duration-300 ${
-              activeTab === item.id
+              activeTab === item.id || pathname === item.href
                 ? 'bg-white text-black border-2 border-black shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}

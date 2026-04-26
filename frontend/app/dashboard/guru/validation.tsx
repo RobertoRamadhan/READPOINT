@@ -79,7 +79,7 @@ export default function ValidationPage() {
       // Load validation stats
       const statsRes = await api.validations.getStatistics();
       if (statsRes) {
-        setStats(statsRes as ValidationStats);
+        setStats(statsRes.data as ValidationStats);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to load validation data';

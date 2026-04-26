@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Card } from '@/components/shared';
 
-interface User {
-  id?: number;
+interface FormData {
   name: string;
   email: string;
   role: 'admin' | 'guru' | 'siswa';
@@ -16,8 +15,8 @@ interface User {
 interface UserFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (user: User) => void;
-  editingUser?: User | null;
+  onSubmit: (user: any) => Promise<void>;
+  editingUser?: any;
   loading?: boolean;
 }
 
@@ -28,7 +27,7 @@ export default function UserForm({
   editingUser,
   loading = false
 }: UserFormProps) {
-  const [formData, setFormData] = useState<User>({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     role: 'siswa',
@@ -93,7 +92,7 @@ export default function UserForm({
     }
   };
 
-  const handleChange = (field: keyof User, value: any) => {
+  const handleChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
