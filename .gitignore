@@ -1,2 +1,5 @@
+# Vercel
 .vercel
+
+# Environment files (optional - can commit if needed)
 .env*.local
