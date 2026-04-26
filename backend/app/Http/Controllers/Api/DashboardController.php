@@ -69,10 +69,21 @@ class DashboardController extends Controller
     public function adminBooks()
     {
         try {
-            $books = Ebook::select('id', 'title', 'author', 'pages', 'category', 'is_active')
-                ->paginate(10);
+            $books = Ebook::where('is_active', true)
+                ->select('id', 'title', 'author', 'pages', 'category', 'is_active', 'poin_per_halaman', 'file_path', 'cover_image')
+                ->get()
+                ->map(function ($book) {
+                    // Convert storage paths to full URLs
+                    if ($book->cover_image) {
+                        $book->cover_image = asset('storage/' . $book->cover_image);
+                    }
+                    if ($book->file_path) {
+                        $book->pdf_file = asset('storage/' . $book->file_path);
+                    }
+                    return $book;
+                });
 
-            return response()->json($books);
+            return response()->json(['data' => $books]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

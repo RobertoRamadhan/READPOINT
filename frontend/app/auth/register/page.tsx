@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -13,11 +13,35 @@ export default function RegisterPage() {
     password: '',
     password_confirmation: '',
     role: 'siswa',
+    wali_kelas: '',
   });
+  const [guruList, setGuruList] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingGuru, setLoadingGuru] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
   const { login } = useAuth();
+
+  useEffect(() => {
+    const fetchGuruList = async () => {
+      try {
+        setLoadingGuru(true);
+        const response = await api.users.list();
+        const users = Array.isArray(response.data) ? response.data : [];
+        const guruUsers = users.filter((u: any) => u.role === 'guru').map((u: any) => ({
+          id: u.id,
+          name: u.name
+        }));
+        setGuruList(guruUsers);
+      } catch (err) {
+        console.error('Failed to fetch guru list:', err);
+      } finally {
+        setLoadingGuru(false);
+      }
+    };
+
+    fetchGuruList();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -97,6 +121,24 @@ export default function RegisterPage() {
               disabled={loading}
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Wali Kelas</label>
+            <select
+              name="wali_kelas"
+              value={formData.wali_kelas}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border-2 border-slate-300 text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 transition text-sm"
+              disabled={loadingGuru || loading}
+            >
+              <option value="">Pilih Wali Kelas</option>
+              {guruList.map((guru) => (
+                <option key={guru.id} value={guru.id.toString()}>
+                  {guru.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

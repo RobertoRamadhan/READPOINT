@@ -18,7 +18,13 @@ interface AdminSidebarProps {
   sidebarOpen: boolean;
   onTabChange: (tabId: string) => void;
   onCloseSidebar: () => void;
-  menuItems: MenuItem[];
+  menuItems?: MenuItem[];
+  role?: 'admin' | 'guru';
+  user?: {
+    name: string;
+    email: string;
+    profile_photo_url?: string;
+  };
 }
 
 export default function AdminSidebar({
@@ -27,8 +33,43 @@ export default function AdminSidebar({
   onTabChange,
   onCloseSidebar,
   menuItems,
+  role = 'admin',
+  user,
 }: AdminSidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Default menu items based on role
+  const defaultMenuItems: MenuItem[] = role === 'admin' ? [
+    { id: 'beranda', label: 'Beranda', icon: '🏠' },
+    {
+      id: 'manajemen',
+      label: 'Manajemen',
+      icon: '⚙️',
+      subItems: [
+        { id: 'ebooks', label: 'E-Book', icon: '📚' },
+        { id: 'rewards', label: 'Reward', icon: '🎁' },
+        { id: 'users', label: 'User', icon: '👥' },
+      ],
+    },
+    { id: 'laporan', label: 'Laporan', icon: '📊' },
+    { id: 'pengaturan', label: 'Pengaturan', icon: '🔧' },
+  ] : [
+    { id: 'beranda', label: 'Beranda', icon: '🏠' },
+    {
+      id: 'manajemen',
+      label: 'Manajemen',
+      icon: '⚙️',
+      subItems: [
+        { id: 'validasi', label: 'Validasi Pembacaan', icon: '✅' },
+        { id: 'kuis', label: 'Buat Kuis', icon: '❓' },
+        { id: 'siswa', label: 'Daftar Siswa', icon: '👨‍🎓' },
+      ],
+    },
+    { id: 'laporan', label: 'Laporan', icon: '📊' },
+    { id: 'pengaturan', label: 'Pengaturan', icon: '🔧' },
+  ];
+
+  const items = menuItems || defaultMenuItems;
 
   const toggleExpand = (itemId: string) => {
     setExpandedItems((prev) =>
@@ -56,14 +97,35 @@ export default function AdminSidebar({
     >
       {/* Header */}
       <div className="p-6 border-b border-blue-800 sticky top-0 bg-gradient-to-r from-blue-900 to-blue-950">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+        <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
           MENU
         </h2>
+        {user && (
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-blue-800 overflow-hidden flex-shrink-0">
+              {user.profile_photo_url ? (
+                <img
+                  src={user.profile_photo_url}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-blue-300 text-xl">
+                  👤
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+              <p className="text-xs text-blue-300 truncate">{user.email}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}
       <nav className="p-0 pb-20">
-        {menuItems.map((item) => {
+        {items.map((item) => {
           const isExpanded = expandedItems.includes(item.id);
           const isActive = activeTab === item.id;
           const hasSubItems = item.subItems && item.subItems.length > 0;

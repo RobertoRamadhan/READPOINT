@@ -29,15 +29,17 @@ export default function DashboardLayout({
   }, [dropdownOpen]);
 
   const handleLogout = async () => {
-    logout();
-    router.push('/login');
+    try {
+      await logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  const roleIcons: { [key: string]: string } = {
-    siswa: '👨‍🎓',
-    guru: '👨‍🏫',
-    admin: '⚙️',
-  };
+  if (!mounted) {
+    return null;
+  }
 
   const roleLabels: { [key: string]: string } = {
     siswa: 'Siswa',
@@ -48,64 +50,75 @@ export default function DashboardLayout({
   const roleLabel = mounted && user?.role ? roleLabels[user.role] || 'User' : 'User';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       {/* Header/Navbar */}
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm">
+      <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 border-b border-amber-900 shadow-md">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             {/* Logo */}
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-white">
                 READPOINT
               </h1>
             </div>
 
-            {/* Center - User Info */}
-            <div className="hidden sm:flex items-center gap-2 text-slate-700">
-              <span className="text-sm font-semibold">{mounted ? user?.name : 'Loading...'}</span>
-              <span className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
-                {roleLabel}
-              </span>
-            </div>
-
-            {/* User Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors duration-200"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white text-sm font-bold">
-                  {mounted ? user?.name?.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <svg
-                  className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {/* User Info & Menu */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-sm font-semibold text-white">{mounted ? user?.name : 'Memuat...'}</span>
+                <span className="text-xs text-amber-100">{roleLabel}</span>
+              </div>
+              
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-amber-600 text-white transition-colors duration-200"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </button>
-
-              {/* Dropdown Menu */}
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 z-10 animate-slide-up">
-                  <div className="p-4 border-b border-slate-200">
-                    <p className="text-sm font-bold text-slate-900">{mounted ? user?.name : 'User'}</p>
-                    <p className="text-xs text-slate-500 mt-1">{mounted ? user?.email : 'Loading...'}</p>
-                    <p className="text-xs text-blue-600 font-semibold mt-2">{roleLabel}</p>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 overflow-hidden flex items-center justify-center">
+                    {user?.profile_photo_url ? (
+                      <img
+                        src={user.profile_photo_url}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white text-sm font-bold">
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-semibold transition-colors rounded-b-lg"
-                  >
-                    Keluar
-                  </button>
-                </div>
-              )}
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (user?.role === 'siswa') {
+                          router.push('/dashboard/siswa/profile');
+                        } else if (user?.role === 'guru') {
+                          router.push('/dashboard/guru/profile');
+                        } else if (user?.role === 'admin') {
+                          router.push('/dashboard/admin/profile');
+                        }
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Pengaturan Profil
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLogout();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Keluar
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -117,9 +130,9 @@ export default function DashboardLayout({
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-slate-600">
-          <p>© 2026 READPOINT - Platform Literasi Digital Indonesia</p>
+      <footer className="bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 border-t border-amber-900 mt-auto w-full">
+        <div className="px-4 sm:px-6 lg:px-8 py-6 text-center text-sm">
+          <p className="text-white !important" style={{ color: 'white' }}>© 2026 READPOINT - Platform Literasi Digital Indonesia</p>
         </div>
       </footer>
     </div>

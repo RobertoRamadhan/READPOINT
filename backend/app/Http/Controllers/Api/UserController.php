@@ -71,11 +71,21 @@ class UserController extends Controller
     }
 
     /**
-     * Update user info (Admin only)
+     * Update user info (Admin only or self-update)
      */
     public function update(Request $request, string $id)
     {
         $user = User::findOrFail($id);
+
+        // Check if user is updating their own profile or is admin
+        $isSelfUpdate = $request->user()->id === $user->id;
+        $isAdmin = $request->user()->role === 'admin';
+
+        if (!$isSelfUpdate && !$isAdmin) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 403);
+        }
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -83,9 +93,53 @@ class UserController extends Controller
             'grade_level' => 'sometimes|in:1,2,3',
             'class_name' => 'sometimes|string|max:100',
             'role' => 'sometimes|in:siswa,guru,admin',
+            'current_password' => 'sometimes|required_with:password',
+            'password' => 'sometimes|string|min:6|confirmed',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5000',
         ]);
 
+        // Handle password change for self-update
+        if (isset($validated['password'])) {
+            if (!$isSelfUpdate) {
+                return response()->json([
+                    'message' => 'Cannot change password for other users',
+                ], 403);
+            }
+
+            // Verify current password
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return response()->json([
+                    'message' => 'Current password is incorrect',
+                ], 422);
+            }
+
+            $user->password = Hash::make($validated['password']);
+            unset($validated['password']);
+            unset($validated['password_confirmation']);
+            unset($validated['current_password']);
+        }
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($user->profile_photo_url && file_exists(storage_path('app/public/' . $user->profile_photo_url))) {
+                unlink(storage_path('app/public/' . $user->profile_photo_url));
+            }
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $user->profile_photo_url = $avatarPath;
+            unset($validated['avatar']);
+        }
+
+        // Only admin can change role
+        if (isset($validated['role']) && !$isAdmin) {
+            unset($validated['role']);
+        }
+
         $user->update($validated);
+
+        // Refresh and add full URL to response
+        $user->refresh();
+        $user->profile_photo_url = $user->profile_photo_url ? asset('storage/' . $user->profile_photo_url) : null;
 
         return response()->json([
             'message' => 'User updated successfully',

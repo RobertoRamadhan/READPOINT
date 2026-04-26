@@ -204,6 +204,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
   getMyActivities: (): Promise<ApiResponse> => apiCall('/reading-activities'),
+  getFrequentlyReadBooks: (): Promise<ApiResponse> => apiCall('/reading-activities/frequently-read'),
 
   // Quizzes
   getQuizzes: (bookId: number): Promise<ApiResponse> => apiCall(`/ebooks/${bookId}/quiz`),
@@ -213,6 +214,89 @@ export const api = {
       body: JSON.stringify(data),
     }),
   getMyQuizAttempts: (): Promise<ApiResponse> => apiCall('/quiz/my-attempts'),
+
+  quiz: {
+    create: (data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall('/quiz/create', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall(`/quiz/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number): Promise<ApiResponse> =>
+      apiCall(`/quiz/${id}`, {
+        method: 'DELETE',
+      }),
+    getMyQuizzes: (): Promise<ApiResponse> => apiCall('/quiz/my-quizzes'),
+  },
+
+  // Validations
+  validations: {
+    getPending: (): Promise<ApiResponse> => apiCall('/validations/pending'),
+    getDetail: (id: number): Promise<ApiResponse> => apiCall(`/validations/${id}`),
+    approve: (id: number): Promise<ApiResponse> =>
+      apiCall(`/validations/${id}/approve`, {
+        method: 'PUT',
+      }),
+    reject: (id: number): Promise<ApiResponse> =>
+      apiCall(`/validations/${id}/reject`, {
+        method: 'PUT',
+      }),
+    getHistory: (): Promise<ApiResponse> => apiCall('/validations/history'),
+    getStatistics: (): Promise<ApiResponse> => apiCall('/validations/stats'),
+  },
+
+  // Users
+  users: {
+    list: (): Promise<ApiResponse> => apiCall('/users'),
+    get: (id: number): Promise<ApiResponse> => apiCall(`/users/${id}`),
+    create: (data: Record<string, unknown>): Promise<ApiResponse> =>
+      apiCall('/users/create', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: async (id: number, data: FormData | Record<string, unknown>): Promise<ApiResponse> => {
+      if (data instanceof FormData) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const csrfToken = await getCsrfToken();
+        
+        // Add _method parameter for Laravel to simulate PUT
+        data.append('_method', 'PUT');
+        
+        const response = await fetch(`${API_URL}/users/${id}`, {
+          method: 'POST',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+          },
+          credentials: 'include',
+          body: data,
+        });
+        
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `HTTP ${response.status}: Failed to update user`);
+        }
+        return result;
+      }
+      
+      return apiCall(`/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+    delete: (id: number): Promise<ApiResponse> =>
+      apiCall(`/users/${id}`, {
+        method: 'DELETE',
+      }),
+    resetPassword: (id: number): Promise<ApiResponse> =>
+      apiCall(`/users/${id}/reset-password`, {
+        method: 'POST',
+      }),
+  },
 
   // Dashboard
   dashboard: {
@@ -227,6 +311,8 @@ export const api = {
     siswaStats: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/stats'),
     siswaBooks: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/books'),
     siswaPointsHistory: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/points-history'),
+    siswaQuizAttempts: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/quiz-attempts'),
+    siswaReadingActivities: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/reading-activities'),
   },
 
   // E-Books Admin CRUD
@@ -265,6 +351,9 @@ export const api = {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         const csrfToken = await getCsrfToken();
         
+        // Add _method parameter for Laravel to simulate PUT
+        data.append('_method', 'PUT');
+        
         const response = await fetch(`${API_URL}/ebooks/${id}`, {
           method: 'POST',
           headers: {
@@ -297,16 +386,63 @@ export const api = {
   rewards: {
     list: (): Promise<ApiResponse> => apiCall('/rewards'),
     get: (id: number): Promise<ApiResponse> => apiCall(`/rewards/${id}`),
-    create: (data: Record<string, unknown>): Promise<ApiResponse> =>
-      apiCall('/rewards', {
+    create: async (data: FormData | Record<string, unknown>): Promise<ApiResponse> => {
+      if (data instanceof FormData) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const csrfToken = await getCsrfToken();
+        
+        const response = await fetch(`${API_URL}/rewards`, {
+          method: 'POST',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+          },
+          credentials: 'include',
+          body: data,
+        });
+        
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `HTTP ${response.status}: Failed to create reward`);
+        }
+        return result;
+      }
+      
+      return apiCall('/rewards', {
         method: 'POST',
         body: JSON.stringify(data),
-      }),
-    update: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
-      apiCall(`/rewards/${id}`, {
+      });
+    },
+    update: async (id: number, data: FormData | Record<string, unknown>): Promise<ApiResponse> => {
+      if (data instanceof FormData) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const csrfToken = await getCsrfToken();
+        
+        // Add _method parameter for Laravel to simulate PUT
+        data.append('_method', 'PUT');
+        
+        const response = await fetch(`${API_URL}/rewards/${id}`, {
+          method: 'POST',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+          },
+          credentials: 'include',
+          body: data,
+        });
+        
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `HTTP ${response.status}: Failed to update reward`);
+        }
+        return result;
+      }
+      
+      return apiCall(`/rewards/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
-      }),
+      });
+    },
     delete: (id: number): Promise<ApiResponse> =>
       apiCall(`/rewards/${id}`, {
         method: 'DELETE',
@@ -320,72 +456,4 @@ export const api = {
     getUserPoints: (): Promise<ApiResponse> => apiCall('/user-points'),
   },
 
-  // Users Admin
-  users: {
-    getAll: (role?: string): Promise<ApiResponse> => 
-      apiCall(`/users${role ? `?role=${role}` : ''}`),
-    get: (id: number): Promise<ApiResponse> => apiCall(`/users/${id}`),
-    create: (data: RegisterRequest): Promise<ApiResponse> =>
-      apiCall('/users', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    update: (id: number, data: Partial<RegisterRequest>): Promise<ApiResponse> =>
-      apiCall(`/users/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    delete: (id: number): Promise<ApiResponse> =>
-      apiCall(`/users/${id}`, {
-        method: 'DELETE',
-      }),
-    resetPassword: (id: number, password: string): Promise<ApiResponse> =>
-      apiCall(`/users/${id}/reset-password`, {
-        method: 'POST',
-        body: JSON.stringify({ password, password_confirmation: password }),
-      }),
-  },
-
-  // Validations Guru
-  validations: {
-    getPending: (): Promise<ApiResponse> => apiCall('/validations/pending'),
-    getDetail: (id: number): Promise<ApiResponse> => apiCall(`/validations/${id}`),
-    approve: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
-      apiCall(`/validations/${id}/approve`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    reject: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
-      apiCall(`/validations/${id}/reject`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    getHistory: (): Promise<ApiResponse> => apiCall('/validations/history'),
-    getStats: (): Promise<ApiResponse> => apiCall('/validations/stats'),
-  },
-
-  // Quizzes Guru & Siswa
-  quizzes: {
-    getByBook: (bookId: number): Promise<ApiResponse> => apiCall(`/ebooks/${bookId}/quiz`),
-    create: (data: Record<string, unknown>): Promise<ApiResponse> =>
-      apiCall('/quiz/create', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    update: (id: number, data: Record<string, unknown>): Promise<ApiResponse> =>
-      apiCall(`/quiz/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    delete: (id: number): Promise<ApiResponse> =>
-      apiCall(`/quiz/${id}`, {
-        method: 'DELETE',
-      }),
-    submit: (data: Record<string, unknown>): Promise<ApiResponse> =>
-      apiCall('/quiz/submit', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    getMyAttempts: (): Promise<ApiResponse> => apiCall('/quiz/my-attempts'),
-  },
-};
+  };

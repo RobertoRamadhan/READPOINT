@@ -1,0 +1,106 @@
+'use client';
+
+import React from 'react';
+import { Card, Button, Badge } from '@/components/shared';
+
+interface Reward {
+  id: number;
+  name: string;
+  description: string;
+  points_required: number;
+  stock: number;
+  image_url?: string;
+}
+
+interface RewardGridProps {
+  rewards: Reward[];
+  userPoints: number;
+  loading?: boolean;
+  onRedeem: (rewardId: number) => void;
+}
+
+export default function RewardGrid({ rewards, userPoints, loading, onRedeem }: RewardGridProps) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }, (_, i) => (
+          <Card key={i} className="animate-pulse">
+            <div className="h-40 bg-gray-200 rounded-t-lg mb-4"></div>
+            <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded mb-4"></div>
+            <div className="space-y-2 mb-4">
+              <div className="h-3 bg-gray-200 rounded"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (rewards.length === 0) {
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-xl p-12 text-center border-2 border-purple-200">
+        <p className="text-gray-800 font-black text-lg">🎁 Belum ada rewards tersedia</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {rewards.map((reward) => (
+        <RewardCard
+          key={reward.id}
+          reward={reward}
+          userPoints={userPoints}
+          onRedeem={onRedeem}
+        />
+      ))}
+    </div>
+  );
+}
+
+function RewardCard({ reward, userPoints, onRedeem }: { 
+  reward: Reward; 
+  userPoints: number; 
+  onRedeem: (rewardId: number) => void;
+}) {
+  const canRedeem = reward.stock > 0 && userPoints >= reward.points_required;
+
+  return (
+    <Card hover className="overflow-hidden group">
+      <div className="h-40 bg-gradient-to-br from-purple-300 via-pink-400 to-rose-500 flex items-center justify-center text-6xl relative overflow-hidden group-hover:scale-110 transition-transform duration-300">
+        🎁
+      </div>
+      
+      <div className="p-6">
+        <h3 className="font-black text-gray-900 mb-3 text-lg">{reward.name}</h3>
+        <p className="text-sm text-gray-700 font-semibold mb-5 line-clamp-2">{reward.description}</p>
+        
+        <div className="space-y-3 text-sm mb-6">
+          <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+            <span className="text-gray-800 font-black">💰 Cost</span>
+            <span className="font-black text-purple-700">{reward.points_required} pts</span>
+          </div>
+          <div className="flex items-center justify-between bg-pink-50 px-4 py-3 rounded-lg border border-pink-200">
+            <span className="text-gray-800 font-black">📦 Stock</span>
+            <span className="font-black text-gray-900">{reward.stock} left</span>
+          </div>
+        </div>
+
+        <Button
+          onClick={() => onRedeem(reward.id)}
+          disabled={!canRedeem}
+          className={`w-full ${
+            canRedeem
+              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          {reward.stock <= 0 ? '❌ Out of Stock' : '✨ Redeem'}
+        </Button>
+      </div>
+    </Card>
+  );
+}

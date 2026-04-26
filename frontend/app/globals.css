@@ -1,16 +1,70 @@
 @import "tailwindcss";
 
 :root {
+  /* Unified Blue Color System */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+  
+  /* Neutral Color System */
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  
+  /* Semantic Colors (all based on blue theme) */
   --background: #ffffff;
-  --foreground: #0f172a;
-  --primary: #0ea5e9;
-  --primary-dark: #0284c7;
-  --accent: #f59e0b;
-  --success: #10b981;
-  --danger: #ef4444;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --foreground: var(--gray-900);
+  --primary: var(--primary-600);
+  --primary-dark: var(--primary-700);
+  --primary-light: var(--primary-500);
+  --success: var(--primary-500);
+  --warning: var(--gray-600);
+  --danger: var(--gray-700);
+  --muted: var(--gray-100);
+  --border: var(--gray-200);
+  
+  /* Shadow System */
+  --shadow-sm: 0 1px 2px 0 rgba(30, 58, 138, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(30, 58, 138, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(30, 58, 138, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(30, 58, 138, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(30, 58, 138, 0.25);
+  
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  
+  /* Mobile-first responsive variables */
+  --mobile-breakpoint: 768px;
+  --tablet-breakpoint: 1024px;
+  --desktop-breakpoint: 1280px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,14 +85,13 @@ html {
 }
 
 body {
-  background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
+  background: var(--gray-50);
   color: var(--foreground);
   line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* ─── Custom Scrollbar ─── */
@@ -52,12 +105,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #0ea5e9, #0284c7);
-  border-radius: 5px;
+  background: var(--primary-600);
+  border-radius: var(--radius-md);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #0284c7, #0369a1);
+  background: var(--primary-700);
 }
 
 /* ─── Selection ─── */

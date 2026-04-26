@@ -89,21 +89,6 @@ export default function GuruDashboard() {
     return null;
   }
 
-  const menuItems = [
-    { id: 'beranda', label: 'Beranda' },
-    {
-      id: 'manajemen',
-      label: 'Manajemen',
-      subItems: [
-        { id: 'validasi', label: 'Validasi Pembacaan' },
-        { id: 'kuis', label: 'Buat Kuis' },
-        { id: 'siswa', label: 'Daftar Siswa' },
-      ],
-    },
-    { id: 'laporan', label: 'Laporan' },
-    { id: 'pengaturan', label: 'Pengaturan' },
-  ];
-
   return (
     <div className="flex w-full">
       {/* Hamburger Button */}
@@ -130,7 +115,8 @@ export default function GuruDashboard() {
           sidebarOpen={sidebarOpen}
           onTabChange={setActiveTab}
           onCloseSidebar={() => setSidebarOpen(false)}
-          menuItems={menuItems}
+          role="guru"
+          user={user}
         />
 
         {/* Main Content */}
@@ -155,8 +141,244 @@ export default function GuruDashboard() {
 
             {/* Siswa Tab */}
             {activeTab === 'siswa' && <StudentListTab />}
+
+            {/* Settings Tab */}
+            {activeTab === 'pengaturan' && (
+              <div className="p-8">
+                <ProfileSettings />
+              </div>
+            )}
           </div>
         </div>
+    </div>
+  );
+}
+
+// ============== PROFILE SETTINGS ==============
+function ProfileSettings() {
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    current_password: '',
+    new_password: '',
+    password_confirmation: '',
+    avatar: null as File | null,
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        current_password: '',
+        new_password: '',
+        password_confirmation: '',
+        avatar: null,
+      });
+    }
+  }, [user]);
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.name || !formData.email) {
+      setError('Nama dan email harus diisi');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      
+      const uploadFormData = new FormData();
+      uploadFormData.append('name', formData.name);
+      uploadFormData.append('email', formData.email);
+      if (formData.avatar) {
+        uploadFormData.append('avatar', formData.avatar);
+      }
+      
+      await api.users.update(user!.id, uploadFormData);
+      setSuccess('Profil berhasil diperbarui');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal memperbarui profil');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.current_password || !formData.new_password) {
+      setError('Password saat ini dan password baru harus diisi');
+      return;
+    }
+
+    if (formData.new_password !== formData.password_confirmation) {
+      setError('Password baru tidak cocok dengan konfirmasi');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await api.users.update(user!.id, {
+        current_password: formData.current_password,
+        password: formData.new_password,
+        password_confirmation: formData.password_confirmation,
+      });
+      setSuccess('Password berhasil diperbarui');
+      setFormData({
+        ...formData,
+        current_password: '',
+        new_password: '',
+        password_confirmation: '',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal memperbarui password');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Pengaturan Profil</h1>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+          {success}
+        </div>
+      )}
+
+      {/* Profile Information */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Informasi Profil</h2>
+        <form onSubmit={handleProfileUpdate} className="space-y-4">
+          {/* Avatar Upload */}
+          <div className="flex items-center gap-6 mb-6">
+            <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+              {formData.avatar ? (
+                <img
+                  src={URL.createObjectURL(formData.avatar)}
+                  alt="Avatar Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : user?.profile_photo_url ? (
+                <img
+                  src={user.profile_photo_url}
+                  alt="Current Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
+                  👤
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Foto Profil</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFormData({ ...formData, avatar: e.target.files?.[0] || null })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG. Maksimal 5MB</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Nama Lengkap</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-all disabled:opacity-50"
+            >
+              {submitting ? 'Menyimpan...' : 'Simpan Profil'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Password Change */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Ubah Password</h2>
+        <form onSubmit={handlePasswordUpdate} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Password Saat Ini</label>
+            <input
+              type="password"
+              value={formData.current_password}
+              onChange={(e) => setFormData({ ...formData, current_password: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Password Baru</label>
+            <input
+              type="password"
+              value={formData.new_password}
+              onChange={(e) => setFormData({ ...formData, new_password: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              required
+              minLength={6}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Konfirmasi Password Baru</label>
+            <input
+              type="password"
+              value={formData.password_confirmation}
+              onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              required
+              minLength={6}
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-all disabled:opacity-50"
+            >
+              {submitting ? 'Menyimpan...' : 'Ubah Password'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -176,12 +398,6 @@ function BerandaTab({ stats, dataLoading }: { stats: GuruStats; dataLoading: boo
 
   return (
     <div className="p-8 space-y-8">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-lg p-10 shadow-lg animate-slide-up">
-        <h1 className="text-5xl font-bold mb-3">Welcome, Teacher</h1>
-        <p className="text-blue-100 text-lg">Manage your students, validate reading progress, and create learning quizzes</p>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
         <StatCard
@@ -254,7 +470,7 @@ function ValidasiTab() {
   const handleApprove = async (activityId: number) => {
     try {
       setProcessingId(activityId);
-      await api.validations?.approve?.(activityId, { notes: approvalNotes });
+      await api.validations?.approve?.(activityId);
       setSelectedActivity(null);
       setApprovalNotes('');
       fetchPendingActivities();
@@ -272,7 +488,7 @@ function ValidasiTab() {
     }
     try {
       setProcessingId(activityId);
-      await api.validations?.reject?.(activityId, { notes: rejectionNotes });
+      await api.validations?.reject?.(activityId);
       setSelectedActivity(null);
       setRejectionNotes('');
       fetchPendingActivities();
@@ -482,7 +698,7 @@ function QuizTab() {
     try {
       setSubmitting(true);
       setError('');
-      await api.quizzes?.create?.({
+      await api.quiz?.create?.({
         ebook_id: selectedEbook.id,
         questions: questions,
       });

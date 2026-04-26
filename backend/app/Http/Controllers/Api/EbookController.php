@@ -14,7 +14,17 @@ class EbookController extends Controller
         $ebooks = Ebook::where('is_active', true)
             ->select('id', 'title', 'author', 'pages', 'poin_per_halaman', 'file_path', 'cover_image', 'category', 'grade_level')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($ebook) {
+                // Convert storage paths to full URLs
+                if ($ebook->cover_image) {
+                    $ebook->cover_image = asset('storage/' . $ebook->cover_image);
+                }
+                if ($ebook->file_path) {
+                    $ebook->pdf_file = asset('storage/' . $ebook->file_path);
+                }
+                return $ebook;
+            });
 
         return response()->json([
             'data' => $ebooks,
@@ -110,14 +120,58 @@ class EbookController extends Controller
             'poin_per_halaman' => 'sometimes|integer|min:1',
             'category' => 'sometimes|string',
             'is_active' => 'sometimes|boolean',
+            'pdf_file' => 'nullable|file|mimes:pdf|max:50000',
+            'cover_image' => 'nullable|image|mimes:jpg,jpeg,png|max:5000',
         ]);
 
-        $ebook->update($validated);
+        try {
+            // Update PDF if provided
+            if ($request->hasFile('pdf_file')) {
+                // Delete old PDF
+                if ($ebook->file_path && file_exists(storage_path('app/public/' . $ebook->file_path))) {
+                    unlink(storage_path('app/public/' . $ebook->file_path));
+                }
+                $pdfPath = $request->file('pdf_file')->store('ebooks/pdfs', 'public');
+                $ebook->file_path = $pdfPath;
+            }
 
-        return response()->json([
-            'message' => 'E-book updated',
-            'data' => $ebook,
-        ]);
+            // Update cover image if provided
+            if ($request->hasFile('cover_image')) {
+                // Delete old cover
+                if ($ebook->cover_image && file_exists(storage_path('app/public/' . $ebook->cover_image))) {
+                    unlink(storage_path('app/public/' . $ebook->cover_image));
+                }
+                $coverPath = $request->file('cover_image')->store('ebooks/covers', 'public');
+                $ebook->cover_image = $coverPath;
+            }
+
+            // Update other fields
+            $ebook->update([
+                'title' => $validated['title'] ?? $ebook->title,
+                'author' => $validated['author'] ?? $ebook->author,
+                'pages' => $validated['pages'] ?? $ebook->pages,
+                'poin_per_halaman' => $validated['poin_per_halaman'] ?? $ebook->poin_per_halaman,
+                'category' => $validated['category'] ?? $ebook->category,
+                'is_active' => $validated['is_active'] ?? $ebook->is_active,
+            ]);
+
+            // Refresh the model to get updated values
+            $ebook->refresh();
+
+            // Add full URLs to response
+            $ebook->cover_image = $ebook->cover_image ? asset('storage/' . $ebook->cover_image) : null;
+            $ebook->pdf_file = $ebook->file_path ? asset('storage/' . $ebook->file_path) : null;
+
+            return response()->json([
+                'message' => 'E-book updated',
+                'data' => $ebook,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update e-book',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     // Admin: Soft delete e-book

@@ -15,8 +15,15 @@ class RewardController extends Controller
     public function index()
     {
         $rewards = Reward::where('is_active', true)
-            ->select('id', 'name', 'description', 'points_required', 'stock', 'icon', 'category')
-            ->get();
+            ->select('id', 'name', 'description', 'points_required', 'stock', 'icon', 'category', 'image')
+            ->get()
+            ->map(function ($reward) {
+                // Convert storage path to full URL
+                if ($reward->image) {
+                    $reward->image = asset('storage/' . $reward->image);
+                }
+                return $reward;
+            });
 
         return response()->json([
             'data' => $rewards,
@@ -32,14 +39,39 @@ class RewardController extends Controller
             'points_required' => 'required|integer|min:1',
             'stock' => 'required|integer|min:0',
             'category' => 'required|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5000',
         ]);
 
-        $reward = Reward::create($validated + ['is_active' => true]);
+        try {
+            // Store image if provided
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('rewards/images', 'public');
+            }
 
-        return response()->json([
-            'message' => 'Reward created',
-            'data' => $reward,
-        ], 201);
+            $reward = Reward::create([
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'points_required' => $validated['points_required'],
+                'stock' => $validated['stock'],
+                'category' => $validated['category'],
+                'image' => $imagePath,
+                'is_active' => true,
+            ]);
+
+            // Add full URL to response
+            $reward->image = $reward->image ? asset('storage/' . $reward->image) : null;
+
+            return response()->json([
+                'message' => 'Reward created',
+                'data' => $reward,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create reward',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     // Get reward by ID
@@ -63,14 +95,45 @@ class RewardController extends Controller
             'points_required' => 'sometimes|integer|min:1',
             'stock' => 'sometimes|integer|min:0',
             'is_active' => 'sometimes|boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5000',
         ]);
 
-        $reward->update($validated);
+        try {
+            // Update image if provided
+            if ($request->hasFile('image')) {
+                // Delete old image
+                if ($reward->image && file_exists(storage_path('app/public/' . $reward->image))) {
+                    unlink(storage_path('app/public/' . $reward->image));
+                }
+                $imagePath = $request->file('image')->store('rewards/images', 'public');
+                $reward->image = $imagePath;
+            }
 
-        return response()->json([
-            'message' => 'Reward updated',
-            'data' => $reward,
-        ]);
+            // Update other fields
+            $reward->update([
+                'name' => $validated['name'] ?? $reward->name,
+                'description' => $validated['description'] ?? $reward->description,
+                'points_required' => $validated['points_required'] ?? $reward->points_required,
+                'stock' => $validated['stock'] ?? $reward->stock,
+                'is_active' => $validated['is_active'] ?? $reward->is_active,
+            ]);
+
+            // Refresh the model
+            $reward->refresh();
+
+            // Add full URL to response
+            $reward->image = $reward->image ? asset('storage/' . $reward->image) : null;
+
+            return response()->json([
+                'message' => 'Reward updated',
+                'data' => $reward,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update reward',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     // Hapus reward (soft delete)

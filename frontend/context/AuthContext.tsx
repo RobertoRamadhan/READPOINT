@@ -9,6 +9,7 @@ interface User {
   email: string;
   role: 'admin' | 'guru' | 'siswa';
   class_name?: string;
+  profile_photo_url?: string;
 }
 
 interface AuthContextType {
@@ -77,9 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     
-    // Call API logout for server-side session cleanup
+    // Call API logout for server-side session cleanup (fire and forget)
     api.logout().catch(error => {
-      console.warn('[AuthContext] API logout failed:', error);
+      // Silently ignore logout API errors - user is already logged out locally
+      console.debug('[AuthContext] API logout failed (expected if token was invalid):', error);
     });
   };
 

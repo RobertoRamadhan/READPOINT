@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="text-sky-600 text-lg">Loading...</div>
+      <div className="text-sky-600 text-lg">Memuat...</div>
     </div>
   );
 }

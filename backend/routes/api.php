@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('reading-activities/{id}/complete', [ReadingActivityController::class, 'completeReading']);
     Route::get('reading-activities', [ReadingActivityController::class, 'getMyActivities']);
     Route::get('reading-activities/{id}', [ReadingActivityController::class, 'getActivity']);
+    Route::get('reading-activities/frequently-read', [ReadingActivityController::class, 'getFrequentlyReadBooks']);
     
     // Quizzes (Siswa: take, Guru: create)
     Route::get('ebooks/{id}/quiz', [QuizController::class, 'getQuizForBook']);

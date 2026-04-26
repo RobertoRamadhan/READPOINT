@@ -26,6 +26,8 @@ interface Ebook {
   category: string;
   is_active: boolean;
   poin_per_halaman?: number;
+  cover_image?: string;
+  pdf_file?: string;
 }
 
 interface Reward {
@@ -36,6 +38,7 @@ interface Reward {
   stock: number;
   category: string;
   is_active: boolean;
+  image?: string;
 }
 
 interface User {
@@ -102,21 +105,6 @@ export default function AdminDashboard() {
     return null;
   }
 
-  const menuItems = [
-    { id: 'beranda', label: 'Beranda' },
-    {
-      id: 'manajemen',
-      label: 'Manajemen',
-      subItems: [
-        { id: 'ebooks', label: 'E-Book' },
-        { id: 'rewards', label: 'Reward' },
-        { id: 'users', label: 'User' },
-      ],
-    },
-    { id: 'laporan', label: 'Laporan' },
-    { id: 'pengaturan', label: 'Pengaturan' },
-  ];
-
   return (
     <div className="flex w-full">
       {/* Hamburger Button */}
@@ -143,7 +131,8 @@ export default function AdminDashboard() {
           sidebarOpen={sidebarOpen}
           onTabChange={setActiveTab}
           onCloseSidebar={() => setSidebarOpen(false)}
-          menuItems={menuItems}
+          role="admin"
+          user={user}
         />
 
         {/* Main Content */}
@@ -168,8 +157,245 @@ export default function AdminDashboard() {
 
             {/* Users Tab */}
             {activeTab === 'users' && <UserManagementTab />}
+
+            {/* Settings Tab */}
+            {activeTab === 'pengaturan' && (
+              <div className="p-8">
+                <ProfileSettings />
+              </div>
+            )}
           </div>
         </div>
+    </div>
+  );
+}
+
+// ============== PROFILE SETTINGS ==============
+function ProfileSettings() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    current_password: '',
+    new_password: '',
+    password_confirmation: '',
+    avatar: null as File | null,
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        current_password: '',
+        new_password: '',
+        password_confirmation: '',
+        avatar: null,
+      });
+    }
+  }, [user]);
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.name || !formData.email) {
+      setError('Nama dan email harus diisi');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      
+      const uploadFormData = new FormData();
+      uploadFormData.append('name', formData.name);
+      uploadFormData.append('email', formData.email);
+      if (formData.avatar) {
+        uploadFormData.append('avatar', formData.avatar);
+      }
+      
+      await api.users.update(user!.id, uploadFormData);
+      setSuccess('Profil berhasil diperbarui');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal memperbarui profil');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.current_password || !formData.new_password) {
+      setError('Password saat ini dan password baru harus diisi');
+      return;
+    }
+
+    if (formData.new_password !== formData.password_confirmation) {
+      setError('Password baru tidak cocok dengan konfirmasi');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await api.users.update(user!.id, {
+        current_password: formData.current_password,
+        password: formData.new_password,
+        password_confirmation: formData.password_confirmation,
+      });
+      setSuccess('Password berhasil diperbarui');
+      setFormData({
+        ...formData,
+        current_password: '',
+        new_password: '',
+        password_confirmation: '',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal memperbarui password');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Pengaturan Profil</h1>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+          {success}
+        </div>
+      )}
+
+      {/* Profile Information */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Informasi Profil</h2>
+        <form onSubmit={handleProfileUpdate} className="space-y-4">
+          {/* Avatar Upload */}
+          <div className="flex items-center gap-6 mb-6">
+            <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+              {formData.avatar ? (
+                <img
+                  src={URL.createObjectURL(formData.avatar)}
+                  alt="Avatar Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : user?.profile_photo_url ? (
+                <img
+                  src={user.profile_photo_url}
+                  alt="Current Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
+                  👤
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Foto Profil</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFormData({ ...formData, avatar: e.target.files?.[0] || null })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG. Maksimal 5MB</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Nama Lengkap</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all disabled:opacity-50"
+            >
+              {submitting ? 'Menyimpan...' : 'Simpan Profil'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Password Change */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Ubah Password</h2>
+        <form onSubmit={handlePasswordUpdate} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Password Saat Ini</label>
+            <input
+              type="password"
+              value={formData.current_password}
+              onChange={(e) => setFormData({ ...formData, current_password: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Password Baru</label>
+            <input
+              type="password"
+              value={formData.new_password}
+              onChange={(e) => setFormData({ ...formData, new_password: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              minLength={6}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Konfirmasi Password Baru</label>
+            <input
+              type="password"
+              value={formData.password_confirmation}
+              onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              minLength={6}
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all disabled:opacity-50"
+            >
+              {submitting ? 'Menyimpan...' : 'Ubah Password'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -205,15 +431,18 @@ function OverviewTab({ stats, topStudents, dataLoading }: { stats: AdminStats; t
 
   return (
     <div className="p-8 space-y-8 w-full">
-      {/* Activity Widget */}
+      {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-lg shadow-lg p-10 animate-slide-up">
-        <h2 className="text-4xl font-bold text-white mb-8">Today's Activity</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in">
-          <ActivityItem label="Active Students" value={stats.siswa_aktif_hari_ini || 0} delay="0.1s" />
-          <ActivityItem label="Books Read" value={stats.buku_dibaca_hari_ini || 0} delay="0.15s" />
-          <ActivityItem label="Quizzes Completed" value={stats.kuis_dikerjakan_hari_ini || 0} delay="0.2s" />
-          <ActivityItem label="Rewards Claimed" value={stats.reward_diklaim_hari_ini || 0} delay="0.25s" />
-        </div>
+        <h2 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h2>
+        <p className="text-lg text-white/80">Welcome back! Here's what's happening today.</p>
+      </div>
+
+      {/* Activity Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in">
+        <ActivityItem label="Active Students" value={stats.siswa_aktif_hari_ini || 0} delay="0.1s" />
+        <ActivityItem label="Books Read" value={stats.buku_dibaca_hari_ini || 0} delay="0.15s" />
+        <ActivityItem label="Quizzes Completed" value={stats.kuis_dikerjakan_hari_ini || 0} delay="0.2s" />
+        <ActivityItem label="Rewards Claimed" value={stats.reward_diklaim_hari_ini || 0} delay="0.25s" />
       </div>
 
       {/* Charts Section */}
@@ -277,14 +506,45 @@ function StatCard({ title, value, delay = '0s' }: { title: string; value: number
 
 // Activity Item Component
 function ActivityItem({ label, value, delay = '0s' }: { label: string; value: number; delay?: string }) {
+  const getIcon = (label: string) => {
+    if (label.includes('Active')) return '👥';
+    if (label.includes('Books')) return '📖';
+    if (label.includes('Quizzes')) return '✅';
+    if (label.includes('Rewards')) return '🎁';
+    return '📊';
+  };
+
+  const getGradient = (label: string) => {
+    if (label.includes('Active')) return 'from-green-500 to-emerald-600';
+    if (label.includes('Books')) return 'from-blue-500 to-cyan-600';
+    if (label.includes('Quizzes')) return 'from-purple-500 to-pink-600';
+    if (label.includes('Rewards')) return 'from-yellow-500 to-orange-600';
+    return 'from-gray-500 to-gray-600';
+  };
+
+  const getTextColor = (label: string) => {
+    if (label.includes('Rewards')) return 'text-gray-900';
+    return 'text-white';
+  };
+
   return (
     <div
-      className="bg-white/15 backdrop-blur-sm rounded-lg p-6 border border-white/20 text-center text-white hover:bg-white/20 transition-all transform hover:scale-105 animate-scale-up"
+      className={`bg-gradient-to-br ${getGradient(label)} rounded-2xl p-6 text-center ${getTextColor(label)} hover:shadow-2xl transition-all transform hover:scale-105 animate-scale-up relative overflow-hidden group`}
       style={{ animationDelay: delay }}
     >
-      <p className="text-sm font-semibold mb-3 uppercase tracking-wide opacity-100">{label}</p>
-      <p className="text-4xl font-bold">{value}</p>
-      <div className="h-1 w-12 bg-white/40 mx-auto rounded-full mt-4"></div>
+      {/* Icon */}
+      <div className="text-4xl mb-3 transform group-hover:scale-110 transition-transform duration-300">
+        {getIcon(label)}
+      </div>
+      
+      {/* Label */}
+      <p className="text-xs font-bold mb-2 uppercase tracking-wider opacity-90">{label}</p>
+      
+      {/* Value */}
+      <p className="text-5xl font-black drop-shadow-lg">{value}</p>
+      
+      {/* Decorative element */}
+      <div className="h-1 w-16 bg-white/30 mx-auto rounded-full mt-4"></div>
     </div>
   );
 }
@@ -296,6 +556,7 @@ function EbookManagementTab() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
+  const [editingEbook, setEditingEbook] = useState<Ebook | null>(null);
 
   useEffect(() => {
     fetchEbooks();
@@ -323,6 +584,11 @@ function EbookManagementTab() {
     }
   };
 
+  const handleEdit = (ebook: Ebook) => {
+    setEditingEbook(ebook);
+    setShowForm(true);
+  };
+
   const filteredData = data.filter(item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.author.toLowerCase().includes(searchTerm.toLowerCase())
@@ -331,58 +597,92 @@ function EbookManagementTab() {
   return (
     <div className="p-8 space-y-6">
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-white">Manajemen E-Book</h2>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition-all"
-          >
-            {showForm ? 'Tutup' : '+ Tambah'}
-          </button>
-        </div>
-
         <div className="p-8 space-y-4">
-          {showForm && <EbookForm onSuccess={() => { setShowForm(false); fetchEbooks(); }} />}
+          {showForm && <EbookForm onSuccess={() => { setShowForm(false); setEditingEbook(null); fetchEbooks(); }} editingEbook={editingEbook} />}
 
-          <input
-            type="text"
-            placeholder="Cari e-book..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="flex gap-3 mb-4">
+            <input
+              type="text"
+              placeholder="Cari e-book..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:shadow-lg transition-all"
+            >
+              + Tambah E-Book
+            </button>
+          </div>
 
           {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
 
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500">Memuat...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredData.map(ebook => (
                 <div key={ebook.id} className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-bold text-gray-900">{ebook.title}</h3>
-                      <p className="text-sm text-gray-600">{ebook.author}</p>
+                  <div className="flex gap-4">
+                    {/* Left side: Image and PDF */}
+                    <div className="flex-shrink-0">
+                      {ebook.cover_image ? (
+                        <img
+                          src={ebook.cover_image}
+                          alt={ebook.title}
+                          className="w-24 h-32 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-24 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                          📚
+                        </div>
+                      )}
+                      {ebook.pdf_file && (
+                        <a
+                          href={ebook.pdf_file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 block w-full text-center px-2 py-1 bg-green-100 text-green-600 rounded text-xs font-bold hover:bg-green-200 transition-all"
+                        >
+                          📄 PDF
+                        </a>
+                      )}
                     </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700`}>
-                      {ebook.is_active ? 'Aktif' : 'Nonaktif'}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-600 space-y-1 mb-4">
-                    <p>{ebook.pages} halaman</p>
-                    <p>🏷️ {ebook.category}</p>
-                    <p>⭐ {ebook.poin_per_halaman} poin/halaman</p>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => handleDelete(ebook.id)}
-                      className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-bold hover:bg-blue-200 transition-all"
-                    >
-                      Hapus
-                    </button>
+
+                    {/* Right side: Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-900 text-sm truncate">{ebook.title}</h3>
+                          <p className="text-xs text-gray-600 truncate">{ebook.author}</p>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 ml-2`}>
+                          {ebook.is_active ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-gray-600 space-y-1 mb-3">
+                        <p>{ebook.pages} halaman</p>
+                        <p>🏷️ {ebook.category}</p>
+                        <p>⭐ {ebook.poin_per_halaman} poin/halaman</p>
+                      </div>
+
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleEdit(ebook)}
+                          className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-bold hover:bg-blue-200 transition-all"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ebook.id)}
+                          className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold hover:bg-red-200 transition-all"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -394,7 +694,7 @@ function EbookManagementTab() {
   );
 }
 
-function EbookForm({ onSuccess }: { onSuccess: () => void }) {
+function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editingEbook: Ebook | null }) {
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -402,9 +702,26 @@ function EbookForm({ onSuccess }: { onSuccess: () => void }) {
     category: '',
     poin_per_halaman: 5,
     grade_level: '1',
+    pdf_file: null as File | null,
+    cover_image: null as File | null,
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editingEbook) {
+      setFormData({
+        title: editingEbook.title,
+        author: editingEbook.author,
+        pages: editingEbook.pages,
+        category: editingEbook.category,
+        poin_per_halaman: editingEbook.poin_per_halaman || 5,
+        grade_level: '1',
+        pdf_file: null,
+        cover_image: null,
+      });
+    }
+  }, [editingEbook]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -415,9 +732,34 @@ function EbookForm({ onSuccess }: { onSuccess: () => void }) {
       return;
     }
 
+    if (!editingEbook && !formData.pdf_file) {
+      setError('PDF file harus diupload');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      await api.ebooks.create(formData);
+      
+      // Create FormData for file upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('title', formData.title);
+      uploadFormData.append('author', formData.author);
+      uploadFormData.append('pages', formData.pages.toString());
+      uploadFormData.append('category', formData.category);
+      uploadFormData.append('poin_per_halaman', formData.poin_per_halaman.toString());
+      uploadFormData.append('grade_level', formData.grade_level);
+      if (formData.pdf_file) {
+        uploadFormData.append('pdf_file', formData.pdf_file);
+      }
+      if (formData.cover_image) {
+        uploadFormData.append('cover_image', formData.cover_image);
+      }
+
+      if (editingEbook) {
+        await api.ebooks.update?.(editingEbook.id, uploadFormData);
+      } else {
+        await api.ebooks.create(uploadFormData);
+      }
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan');
@@ -428,6 +770,9 @@ function EbookForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+      <h3 className="text-xl font-bold text-gray-900">
+        {editingEbook ? 'Edit E-Book' : 'Tambah E-Book Baru'}
+      </h3>
       {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-bold">{error}</div>}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -436,7 +781,7 @@ function EbookForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="Judul Buku"
           value={formData.title}
           onChange={(e) => setFormData({...formData, title: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
         <input
@@ -466,6 +811,41 @@ function EbookForm({ onSuccess }: { onSuccess: () => void }) {
         />
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">📄 PDF File {editingEbook ? '(Opsional - kosongkan jika tidak ingin mengubah)' : '*'}</label>
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={(e) => setFormData({...formData, pdf_file: e.target.files?.[0] || null})}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+            required={!editingEbook}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">🖼️ Cover Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFormData({...formData, cover_image: e.target.files?.[0] || null})}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          />
+        </div>
+      </div>
+
+      {formData.cover_image && (
+        <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+          <div className="w-16 h-20 bg-gray-300 rounded overflow-hidden">
+            <img 
+              src={URL.createObjectURL(formData.cover_image)} 
+              alt="Preview" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span className="text-sm text-gray-700 font-medium">{formData.cover_image.name}</span>
+        </div>
+      )}
+
       <div className="flex gap-2 justify-end">
         <button
           type="submit"
@@ -486,6 +866,7 @@ function RewardManagementTab() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
+  const [editingReward, setEditingReward] = useState<Reward | null>(null);
 
   useEffect(() => {
     fetchRewards();
@@ -513,6 +894,11 @@ function RewardManagementTab() {
     }
   };
 
+  const handleEdit = (reward: Reward) => {
+    setEditingReward(reward);
+    setShowForm(true);
+  };
+
   const filteredData = data.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -520,58 +906,85 @@ function RewardManagementTab() {
   return (
     <div className="p-8 space-y-6">
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-white">Manajemen Reward</h2>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition-all"
-          >
-            {showForm ? 'Tutup' : '+ Tambah'}
-          </button>
-        </div>
-
         <div className="p-8 space-y-4">
-          {showForm && <RewardForm onSuccess={() => { setShowForm(false); fetchRewards(); }} />}
+          {showForm && <RewardForm onSuccess={() => { setShowForm(false); setEditingReward(null); fetchRewards(); }} editingReward={editingReward} />}
 
-          <input
-            type="text"
-            placeholder="Cari reward..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="flex gap-3 mb-4">
+            <input
+              type="text"
+              placeholder="Cari reward..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              onClick={() => {
+                setEditingReward(null);
+                setShowForm(!showForm);
+              }}
+              className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all"
+            >
+              {showForm ? 'Tutup' : '+ Tambah'}
+            </button>
+          </div>
 
           {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
 
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500">Memuat...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredData.map(reward => (
                 <div key={reward.id} className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-bold text-gray-900">{reward.name}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">{reward.description}</p>
+                  <div className="flex gap-4">
+                    {/* Left side: Image */}
+                    <div className="flex-shrink-0">
+                      {reward.image ? (
+                        <img
+                          src={reward.image}
+                          alt={reward.name}
+                          className="w-24 h-32 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-24 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                          🎁
+                        </div>
+                      )}
                     </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700`}>
-                      {reward.is_active ? 'Aktif' : 'Nonaktif'}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-600 space-y-1 mb-4">
-                    <p>{reward.points_required} poin</p>
-                    <p>{reward.stock} tersedia</p>
-                    <p>{reward.category}</p>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => handleDelete(reward.id)}
-                      className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-bold hover:bg-blue-200 transition-all"
-                    >
-                      Hapus
-                    </button>
+
+                    {/* Right side: Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-900 text-sm truncate">{reward.name}</h3>
+                          <p className="text-xs text-gray-600 line-clamp-2">{reward.description}</p>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 ml-2`}>
+                          {reward.is_active ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-gray-600 space-y-1 mb-3">
+                        <p>{reward.points_required} poin</p>
+                        <p>{reward.stock} tersedia</p>
+                        <p>🏷️ {reward.category}</p>
+                      </div>
+
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleEdit(reward)}
+                          className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-bold hover:bg-blue-200 transition-all"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(reward.id)}
+                          className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold hover:bg-red-200 transition-all"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -583,16 +996,30 @@ function RewardManagementTab() {
   );
 }
 
-function RewardForm({ onSuccess }: { onSuccess: () => void }) {
+function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editingReward: Reward | null }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     points_required: 100,
     stock: 10,
     category: '',
+    image: null as File | null,
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editingReward) {
+      setFormData({
+        name: editingReward.name,
+        description: editingReward.description,
+        points_required: editingReward.points_required,
+        stock: editingReward.stock,
+        category: editingReward.category,
+        image: null,
+      });
+    }
+  }, [editingReward]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -605,7 +1032,22 @@ function RewardForm({ onSuccess }: { onSuccess: () => void }) {
 
     try {
       setSubmitting(true);
-      await api.rewards.create(formData);
+      
+      const uploadFormData = new FormData();
+      uploadFormData.append('name', formData.name);
+      uploadFormData.append('description', formData.description);
+      uploadFormData.append('points_required', formData.points_required.toString());
+      uploadFormData.append('stock', formData.stock.toString());
+      uploadFormData.append('category', formData.category);
+      if (formData.image) {
+        uploadFormData.append('image', formData.image);
+      }
+
+      if (editingReward) {
+        await api.rewards.update(editingReward.id, uploadFormData);
+      } else {
+        await api.rewards.create(uploadFormData);
+      }
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan');
@@ -616,6 +1058,9 @@ function RewardForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+      <h3 className="text-xl font-bold text-gray-900">
+        {editingReward ? 'Edit Reward' : 'Tambah Reward Baru'}
+      </h3>
       {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-bold">{error}</div>}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -642,7 +1087,7 @@ function RewardForm({ onSuccess }: { onSuccess: () => void }) {
         value={formData.description}
         onChange={(e) => setFormData({...formData, description: e.target.value})}
         rows={3}
-        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         required
       />
 
@@ -666,6 +1111,29 @@ function RewardForm({ onSuccess }: { onSuccess: () => void }) {
           required
         />
       </div>
+
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">🖼️ Gambar Reward</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFormData({...formData, image: e.target.files?.[0] || null})}
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
+      </div>
+
+      {formData.image && (
+        <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+          <div className="w-16 h-20 bg-gray-300 rounded overflow-hidden">
+            <img 
+              src={URL.createObjectURL(formData.image)} 
+              alt="Preview" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span className="text-sm text-gray-700 font-medium">{formData.image.name}</span>
+        </div>
+      )}
 
       <div className="flex gap-2 justify-end">
         <button
@@ -696,8 +1164,8 @@ function UserManagementTab() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.users?.getAll?.();
-      setData((response?.data || response || []) as User[]);
+      const response = await api.users?.list?.();
+      setData((response?.data || []) as User[]);
     } catch (err) {
       setError('Gagal memuat data');
     } finally {
@@ -725,18 +1193,6 @@ function UserManagementTab() {
   return (
     <div className="p-8 space-y-6">
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-white">Manajemen Pengguna</h2>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition-all"
-          >
-            {showForm ? 'Tutup' : '+ Tambah'}
-          </button>
-        </div>
-
         <div className="p-8 space-y-4">
           {showForm && <UserForm onSuccess={() => { setShowForm(false); fetchUsers(); }} />}
 
@@ -763,7 +1219,7 @@ function UserManagementTab() {
           {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
 
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500">Memuat...</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -790,7 +1246,7 @@ function UserManagementTab() {
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-200 transition-all"
+                          className="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-sm font-bold hover:bg-red-200 transition-all"
                         >
                           Hapus
                         </button>
