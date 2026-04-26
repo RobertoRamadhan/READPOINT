@@ -4,6 +4,6 @@
     "builder": "RAILPACK"
   },
   "deploy": {
-    "preDeployCommand": "php artisan db:seed --force"
+    "preDeployCommand": "php artisan config:clear && php artisan db:seed --force"
   }
 }
