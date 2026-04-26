@@ -112,13 +112,9 @@ if [ $MIGRATION_SUCCESS -eq 0 ]; then
     echo "Continuing with start anyway (data may not exist)..."
 fi
 
-# Seed database (optional)
+# Seed database
 echo "Seeding database..."
-if [ -f /app/database/seeders/DatabaseSeeder.php ]; then
-    php artisan db:seed --class=Database\\Seeders\\DatabaseSeeder --force 2>&1 || echo "⚠ Seeding completed with warnings (may have skipped if data exists)"
-else
-    echo "⚠ DatabaseSeeder not found, skipping seed"
-fi
+php artisan db:seed --force 2>&1 || echo "⚠ Seeding completed with warnings"
 
 # Clear caches (already done above, skip redundant calls)
 echo "Optimization complete!"
