@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { PageLoading } from '@/components/shared';
 
 export default function SiswaProfilePage() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, refreshUser } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
@@ -86,8 +86,11 @@ export default function SiswaProfilePage() {
         uploadFormData.append('avatar', formData.avatar);
       }
       
-      await api.users.update(user!.id, uploadFormData);
+      await api.me.updateProfile(uploadFormData);
       setSuccess('Profil berhasil diperbarui');
+      
+      // Refresh user data to update header/sidebar
+      await refreshUser();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Gagal memperbarui profil';
       setError(errorMsg);
@@ -113,7 +116,7 @@ export default function SiswaProfilePage() {
 
     try {
       setSubmitting(true);
-      await api.users.update(user!.id, {
+      await api.me.updateProfile({
         current_password: formData.current_password,
         password: formData.new_password,
         password_confirmation: formData.password_confirmation,

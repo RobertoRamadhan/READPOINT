@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { PageLoading } from '@/components/shared';
 
 export default function AdminProfilePage() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, refreshUser } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
@@ -61,6 +61,9 @@ export default function AdminProfilePage() {
         email: formData.email,
       });
       setSuccess('Profil berhasil diperbarui');
+      
+      // Refresh user data to update header/sidebar
+      await refreshUser();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Gagal memperbarui profil';
       setError(errorMsg);

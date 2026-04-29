@@ -208,4 +208,38 @@ class QuizController extends Controller
             'message' => 'Quiz question deleted',
         ]);
     }
+
+    // Guru: Get all quizzes created by this guru
+    public function getMyQuizzes(Request $request)
+    {
+        $guru = $request->user();
+        
+        $quizzes = QuizQuestion::where('created_by', $guru->id)
+            ->with('ebook:id,title,author')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('ebook_id')
+            ->map(function ($questions, $ebookId) {
+                $ebook = $questions->first()->ebook;
+                return [
+                    'id' => $ebookId,
+                    'ebook_id' => $ebookId,
+                    'ebook_title' => $ebook->title,
+                    'title' => "Quiz for {$ebook->title}",
+                    'description' => "Quiz with {$questions->count()} questions",
+                    'difficulty' => 'medium',
+                    'points_reward' => $questions->count() * 10,
+                    'time_limit_minutes' => 30,
+                    'passing_score' => 70,
+                    'total_questions' => $questions->count(),
+                    'created_at' => $questions->first()->created_at,
+                    'is_active' => true,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'data' => $quizzes,
+        ]);
+    }
 }

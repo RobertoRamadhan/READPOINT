@@ -94,7 +94,7 @@ function RewardCard({ reward, userPoints, onRedeem }: {
           disabled={!canRedeem}
           className={`w-full ${
             canRedeem
-              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+              ? 'bg-gradient-to-r from-amber-800 to-amber-900 hover:from-amber-900 hover:to-amber-950'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >

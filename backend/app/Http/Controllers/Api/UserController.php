@@ -10,6 +10,79 @@ use Illuminate\Support\Facades\Hash;
 class UserController extends Controller
 {
     /**
+     * Get current authenticated user's profile
+     */
+    public function getProfile(Request $request)
+    {
+        $user = $request->user();
+
+        // Add full URL to profile photo
+        if ($user->profile_photo_url) {
+            $user->profile_photo_url = asset('storage/' . $user->profile_photo_url);
+        }
+
+        return response()->json([
+            'data' => $user,
+        ]);
+    }
+
+    /**
+     * Update current authenticated user's profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'grade_level' => 'sometimes|in:1,2,3',
+            'class_name' => 'sometimes|string|max:100',
+            'wali_kelas' => 'sometimes|string|max:255',
+            'current_password' => 'sometimes|required_with:password',
+            'password' => 'sometimes|string|min:6|confirmed',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5000',
+        ]);
+
+        // Handle password change
+        if (isset($validated['password'])) {
+            // Verify current password
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return response()->json([
+                    'message' => 'Current password is incorrect',
+                ], 422);
+            }
+
+            $user->password = Hash::make($validated['password']);
+            unset($validated['password']);
+            unset($validated['password_confirmation']);
+            unset($validated['current_password']);
+        }
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($user->profile_photo_url && file_exists(storage_path('app/public/' . $user->profile_photo_url))) {
+                unlink(storage_path('app/public/' . $user->profile_photo_url));
+            }
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $user->profile_photo_url = $avatarPath;
+            unset($validated['avatar']);
+        }
+
+        $user->update($validated);
+
+        // Refresh and add full URL to response
+        $user->refresh();
+        $user->profile_photo_url = $user->profile_photo_url ? asset('storage/' . $user->profile_photo_url) : null;
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'data' => $user,
+        ]);
+    }
+
+    /**
      * Get all users (Admin only)
      */
     public function index(Request $request)

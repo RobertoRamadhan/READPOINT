@@ -20,10 +20,20 @@ interface BookGridProps {
   ebooks: Ebook[];
   loading?: boolean;
   showCarousel?: boolean;
+  searchQuery?: string;
 }
 
-export default function BookGrid({ ebooks, loading, showCarousel = false }: BookGridProps) {
+export default function BookGrid({ ebooks, loading, showCarousel = false, searchQuery = '' }: BookGridProps) {
   const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // Filter books based on search query
+  const filteredBooks = searchQuery
+    ? ebooks.filter(book =>
+        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        book.category.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : ebooks;
 
   if (loading) {
     return (
@@ -44,7 +54,15 @@ export default function BookGrid({ ebooks, loading, showCarousel = false }: Book
     );
   }
 
-  if (ebooks.length === 0) {
+  if (filteredBooks.length === 0 && searchQuery) {
+    return (
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-xl p-12 text-center border-2 border-blue-200">
+        <p className="text-gray-800 font-black text-lg">🔍 Tidak ada buku yang cocok dengan pencarian "{searchQuery}"</p>
+      </div>
+    );
+  }
+
+  if (filteredBooks.length === 0) {
     return (
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-xl p-12 text-center border-2 border-blue-200">
         <p className="text-gray-800 font-black text-lg">📚 Belum ada e-books tersedia</p>
@@ -53,8 +71,8 @@ export default function BookGrid({ ebooks, loading, showCarousel = false }: Book
   }
 
   const displayBooks = showCarousel 
-    ? ebooks.slice(carouselIndex, carouselIndex + 4)
-    : ebooks;
+    ? filteredBooks.slice(carouselIndex, carouselIndex + 4)
+    : filteredBooks;
 
   return (
     <div>
@@ -64,9 +82,9 @@ export default function BookGrid({ ebooks, loading, showCarousel = false }: Book
         ))}
       </div>
 
-      {showCarousel && ebooks.length > 4 && (
+      {showCarousel && filteredBooks.length > 4 && (
         <CarouselControls
-          totalItems={ebooks.length}
+          totalItems={filteredBooks.length}
           itemsPerPage={4}
           currentIndex={carouselIndex}
           onIndexChange={setCarouselIndex}
@@ -120,7 +138,7 @@ function BookCard({ book }: { book: Ebook }) {
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2 rounded-lg border border-blue-100">
             <span className="text-gray-700 font-semibold text-xs">📄 Halaman</span>
-            <span className="font-black text-blue-700 text-sm">{book.pages}</span>
+            <span className="font-black text-gray-500 text-sm">{book.pages}</span>
           </div>
           <div className="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2 rounded-lg border border-amber-100">
             <span className="text-gray-700 font-semibold text-xs">⭐ Poin</span>
@@ -129,22 +147,15 @@ function BookCard({ book }: { book: Ebook }) {
         </div>
         
         {book.pdf_file ? (
-          <a
-            href={book.pdf_file}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
-          >
-            <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-md hover:shadow-lg transition-all border-0" size="sm">
-              📖 Baca Sekarang
-            </Button>
-          </a>
-        ) : (
           <Link href={`/dashboard/siswa/read/${book.id}`} className="block">
-            <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-md hover:shadow-lg transition-all border-0" size="sm">
+            <Button className="w-full bg-gradient-to-r from-amber-800 to-amber-900 hover:from-amber-900 hover:to-amber-950 text-white font-bold shadow-md hover:shadow-lg transition-all border-0 py-4 px-8 text-base">
               📖 Baca Sekarang
             </Button>
           </Link>
+        ) : (
+          <div className="text-center text-gray-500 text-sm py-2">
+            PDF tidak tersedia
+          </div>
         )}
       </div>
     </Card>

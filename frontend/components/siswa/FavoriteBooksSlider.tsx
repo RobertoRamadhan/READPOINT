@@ -20,6 +20,7 @@ interface FavoriteBooksSliderProps {
 export default function FavoriteBooksSlider({ books, onBookClick }: FavoriteBooksSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 4;
+  const itemWidth = 280; // w-64 (16rem = 256px) + gap-4 (16px) = 272px, rounded to 280px
 
   useEffect(() => {
     if (books.length === 0) return;
@@ -39,7 +40,6 @@ export default function FavoriteBooksSlider({ books, onBookClick }: FavoriteBook
   }
 
   const maxIndex = Math.max(0, books.length - itemsPerPage);
-  const visibleBooks = books.slice(currentIndex, currentIndex + itemsPerPage);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
@@ -51,7 +51,7 @@ export default function FavoriteBooksSlider({ books, onBookClick }: FavoriteBook
 
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-black text-white mb-4">📚 Buku Populer</h2>
+      <h2 className="text-xl font-black text-amber-900 mb-4">📚 Buku Populer</h2>
       <div className="relative">
         {/* Navigation Buttons */}
         <button
@@ -73,12 +73,12 @@ export default function FavoriteBooksSlider({ books, onBookClick }: FavoriteBook
         <div className="overflow-hidden mx-12">
           <div 
             className="flex transition-transform duration-500 ease-in-out gap-4"
-            style={{ transform: `translateX(0)` }}
+            style={{ transform: `translateX(-${currentIndex * itemWidth}px)` }}
           >
-            {visibleBooks.map((book) => (
+            {books.map((book) => (
               <div
                 key={book.id}
-                className="w-64 max-w-sm bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:scale-105 flex flex-col"
+                className="w-64 max-w-sm bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:scale-105 flex flex-col flex-shrink-0"
                 onClick={() => onBookClick?.(book.id)}
               >
                 <div className="aspect-[2/3] bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 relative overflow-hidden flex-shrink-0">

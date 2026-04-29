@@ -110,7 +110,7 @@ export default function AdminDashboard() {
       {/* Hamburger Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed top-16 left-4 z-40 p-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-all md:hidden"
+          className="fixed top-16 left-4 z-40 p-2 bg-ulue990 text-white rounded-lg hover:bg-belu-08 transition-all md:hidden"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -311,7 +311,7 @@ function ProfileSettings() {
                 type="file"
                 accept="image/*"
                 onChange={(e) => setFormData({ ...formData, avatar: e.target.files?.[0] || null })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
               <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG. Maksimal 5MB</p>
             </div>
@@ -323,7 +323,7 @@ function ProfileSettings() {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
             />
           </div>
@@ -333,7 +333,7 @@ function ProfileSettings() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
             />
           </div>
@@ -341,7 +341,7 @@ function ProfileSettings() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all disabled:opacity-50"
+              className="px-6 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all disabled:opacity-50"
             >
               {submitting ? 'Menyimpan...' : 'Simpan Profil'}
             </button>
@@ -359,7 +359,7 @@ function ProfileSettings() {
               type="password"
               value={formData.current_password}
               onChange={(e) => setFormData({ ...formData, current_password: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
             />
           </div>
@@ -369,7 +369,7 @@ function ProfileSettings() {
               type="password"
               value={formData.new_password}
               onChange={(e) => setFormData({ ...formData, new_password: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
               minLength={6}
             />
@@ -380,7 +380,7 @@ function ProfileSettings() {
               type="password"
               value={formData.password_confirmation}
               onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
               minLength={6}
             />
@@ -389,7 +389,7 @@ function ProfileSettings() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all disabled:opacity-50"
+              className="px-6 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all disabled:opacity-50"
             >
               {submitting ? 'Menyimpan...' : 'Ubah Password'}
             </button>
@@ -406,7 +406,7 @@ function OverviewTab({ stats, topStudents, dataLoading }: { stats: AdminStats; t
     return (
       <div className="text-center py-12">
         <div className="inline-block">
-          <div className="w-12 h-12 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="border-4 border-amber-300 border-t-amber-600 rounded-full animate-spin"></div>
         </div>
         <p className="text-gray-600 font-semibold mt-4">Memuat data...</p>
       </div>
@@ -432,9 +432,9 @@ function OverviewTab({ stats, topStudents, dataLoading }: { stats: AdminStats; t
   return (
     <div className="p-8 space-y-8 w-full">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-lg shadow-lg p-10 animate-slide-up">
+      <div className="bg-gradient-to-r from-amber-800 to-amber-900 text-white rounded-lg shadow-lg p-10 animate-slide-up">
         <h2 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h2>
-        <p className="text-lg text-white/80">Welcome back! Here's what's happening today.</p>
+        <p className="text-lg text-white">Welcome back! Here's what's happening today.</p>
       </div>
 
       {/* Activity Cards */}
@@ -515,16 +515,11 @@ function ActivityItem({ label, value, delay = '0s' }: { label: string; value: nu
   };
 
   const getGradient = (label: string) => {
-    if (label.includes('Active')) return 'from-green-500 to-emerald-600';
-    if (label.includes('Books')) return 'from-blue-500 to-cyan-600';
-    if (label.includes('Quizzes')) return 'from-purple-500 to-pink-600';
-    if (label.includes('Rewards')) return 'from-yellow-500 to-orange-600';
-    return 'from-gray-500 to-gray-600';
+    return 'from-amber-100 to-amber-200';
   };
 
   const getTextColor = (label: string) => {
-    if (label.includes('Rewards')) return 'text-gray-900';
-    return 'text-white';
+    return 'text-amber-900';
   };
 
   return (
@@ -606,11 +601,11 @@ function EbookManagementTab() {
               placeholder="Cari e-book..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             />
             <button
               onClick={() => setShowForm(true)}
-              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:shadow-lg transition-all"
+              className="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg font-bold hover:shadow-lg transition-all"
             >
               + Tambah E-Book
             </button>
@@ -657,7 +652,7 @@ function EbookManagementTab() {
                           <h3 className="font-bold text-gray-900 text-sm truncate">{ebook.title}</h3>
                           <p className="text-xs text-gray-600 truncate">{ebook.author}</p>
                         </div>
-                        <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 ml-2`}>
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-amber-700 ml-2`}>
                           {ebook.is_active ? 'Aktif' : 'Nonaktif'}
                         </span>
                       </div>
@@ -671,7 +666,7 @@ function EbookManagementTab() {
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => handleEdit(ebook)}
-                          className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-bold hover:bg-blue-200 transition-all"
+                          className="px-2 py-1 bg-amber-100 text-amber-600 rounded text-xs font-bold hover:bg-amber-200 transition-all"
                         >
                           Edit
                         </button>
@@ -769,7 +764,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+    <form onSubmit={handleSubmit} className="bg-amber-50 border border-amber-200 rounded-lg p-6 space-y-4">
       <h3 className="text-xl font-bold text-gray-900">
         {editingEbook ? 'Edit E-Book' : 'Tambah E-Book Baru'}
       </h3>
@@ -781,7 +776,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
           placeholder="Judul Buku"
           value={formData.title}
           onChange={(e) => setFormData({...formData, title: e.target.value})}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           required
         />
         <input
@@ -789,7 +784,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
           placeholder="Pengarang"
           value={formData.author}
           onChange={(e) => setFormData({...formData, author: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
         <input
@@ -797,7 +792,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
           placeholder="Total Halaman"
           value={formData.pages}
           onChange={(e) => setFormData({...formData, pages: parseInt(e.target.value) || 1})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           min="1"
           required
         />
@@ -806,7 +801,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
           placeholder="Kategori"
           value={formData.category}
           onChange={(e) => setFormData({...formData, category: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
       </div>
@@ -818,7 +813,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
             type="file"
             accept=".pdf"
             onChange={(e) => setFormData({...formData, pdf_file: e.target.files?.[0] || null})}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 w-full"
             required={!editingEbook}
           />
         </div>
@@ -828,7 +823,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
             type="file"
             accept="image/*"
             onChange={(e) => setFormData({...formData, cover_image: e.target.files?.[0] || null})}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 w-full"
           />
         </div>
       </div>
@@ -850,7 +845,7 @@ function EbookForm({ onSuccess, editingEbook }: { onSuccess: () => void; editing
         <button
           type="submit"
           disabled={submitting}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50"
+          className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50"
         >
           {submitting ? 'Menyimpan...' : 'Simpan'}
         </button>
@@ -915,14 +910,14 @@ function RewardManagementTab() {
               placeholder="Cari reward..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             />
             <button
               onClick={() => {
                 setEditingReward(null);
                 setShowForm(!showForm);
               }}
-              className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all"
+              className="px-5 py-2.5 bg-amber-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all"
             >
               {showForm ? 'Tutup' : '+ Tambah'}
             </button>
@@ -959,7 +954,7 @@ function RewardManagementTab() {
                           <h3 className="font-bold text-gray-900 text-sm truncate">{reward.name}</h3>
                           <p className="text-xs text-gray-600 line-clamp-2">{reward.description}</p>
                         </div>
-                        <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 ml-2`}>
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-amber-700 ml-2`}>
                           {reward.is_active ? 'Aktif' : 'Nonaktif'}
                         </span>
                       </div>
@@ -973,7 +968,7 @@ function RewardManagementTab() {
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => handleEdit(reward)}
-                          className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-bold hover:bg-blue-200 transition-all"
+                          className="px-2 py-1 bg-amber-100 text-amber-600 rounded text-xs font-bold hover:bg-amber-200 transition-all"
                         >
                           Edit
                         </button>
@@ -1057,7 +1052,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+    <form onSubmit={handleSubmit} className="bg-amber-50 border border-amber-200 rounded-lg p-6 space-y-4">
       <h3 className="text-xl font-bold text-gray-900">
         {editingReward ? 'Edit Reward' : 'Tambah Reward Baru'}
       </h3>
@@ -1069,7 +1064,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
           placeholder="Nama Reward"
           value={formData.name}
           onChange={(e) => setFormData({...formData, name: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
         <input
@@ -1077,7 +1072,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
           placeholder="Kategori"
           value={formData.category}
           onChange={(e) => setFormData({...formData, category: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
       </div>
@@ -1087,7 +1082,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
         value={formData.description}
         onChange={(e) => setFormData({...formData, description: e.target.value})}
         rows={3}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
         required
       />
 
@@ -1097,7 +1092,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
           placeholder="Poin Diperlukan"
           value={formData.points_required}
           onChange={(e) => setFormData({...formData, points_required: parseInt(e.target.value) || 1})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           min="1"
           required
         />
@@ -1106,7 +1101,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
           placeholder="Stok Tersedia"
           value={formData.stock}
           onChange={(e) => setFormData({...formData, stock: parseInt(e.target.value) || 1})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           min="0"
           required
         />
@@ -1118,7 +1113,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
           type="file"
           accept="image/*"
           onChange={(e) => setFormData({...formData, image: e.target.files?.[0] || null})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 w-full"
         />
       </div>
 
@@ -1139,7 +1134,7 @@ function RewardForm({ onSuccess, editingReward }: { onSuccess: () => void; editi
         <button
           type="submit"
           disabled={submitting}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50"
+          className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50"
         >
           {submitting ? 'Menyimpan...' : 'Simpan'}
         </button>
@@ -1202,12 +1197,12 @@ function UserManagementTab() {
               placeholder="Cari user..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
               <option value="">Semua Role</option>
               <option value="admin">Admin</option>
@@ -1238,7 +1233,7 @@ function UserManagementTab() {
                       <td className="px-4 py-3 font-semibold text-gray-900">{user.name}</td>
                       <td className="px-4 py-3 text-gray-600">{user.email}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${'bg-blue-100 text-blue-700'}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${'bg-blue-100 text-amber-700'}`}>
                           {user.role === 'admin' ? 'Admin' : user.role === 'guru' ? 'Guru' : 'Siswa'}
                         </span>
                       </td>
@@ -1310,7 +1305,7 @@ function UserForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="Nama Lengkap"
           value={formData.name}
           onChange={(e) => setFormData({...formData, name: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
         <input
@@ -1318,13 +1313,13 @@ function UserForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="Email"
           value={formData.email}
           onChange={(e) => setFormData({...formData, email: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
         <select
           value={formData.role}
           onChange={(e) => setFormData({...formData, role: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         >
           <option value="siswa">Siswa</option>
@@ -1336,14 +1331,14 @@ function UserForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="Kelas/Divisi (opsional)"
           value={formData.class_name}
           onChange={(e) => setFormData({...formData, class_name: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
         <input
           type="password"
           placeholder="Password"
           value={formData.password}
           onChange={(e) => setFormData({...formData, password: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
         <input
@@ -1351,7 +1346,7 @@ function UserForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="Konfirmasi Password"
           value={formData.password_confirmation}
           onChange={(e) => setFormData({...formData, password_confirmation: e.target.value})}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
       </div>
@@ -1360,7 +1355,7 @@ function UserForm({ onSuccess }: { onSuccess: () => void }) {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50"
+          className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50"
         >
           {submitting ? 'Menyimpan...' : 'Simpan'}
         </button>

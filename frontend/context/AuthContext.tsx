@@ -13,10 +13,11 @@ interface User {
 }
 
 interface AuthContextType {
- user: User | null;
+  user: User | null;
   loading: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -85,6 +86,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const refreshUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      // Fetch current user data from API using non-admin endpoint
+      const response = await api.me.getProfile();
+      if (response?.data) {
+        const updatedUser = response.data as User;
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('[AuthContext] Failed to refresh user:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -92,6 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         login,
         logout,
+        refreshUser,
         isAuthenticated: !!user,
       }}
     >

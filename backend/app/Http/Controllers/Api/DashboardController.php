@@ -144,6 +144,22 @@ class DashboardController extends Controller
                         ->where('status', 'completed')
                         ->count();
                     
+                    // Calculate reading progress (average progress across all reading activities)
+                    $readingActivities = ReadingActivity::where('user_id', $student->id)->get();
+                    if ($readingActivities->count() > 0) {
+                        $totalProgress = 0;
+                        foreach ($readingActivities as $activity) {
+                            $ebook = Ebook::find($activity->ebook_id);
+                            if ($ebook && $ebook->pages > 0) {
+                                $progress = ($activity->final_page / $ebook->pages) * 100;
+                                $totalProgress += $progress;
+                            }
+                        }
+                        $student->reading_progress = $totalProgress / $readingActivities->count();
+                    } else {
+                        $student->reading_progress = 0;
+                    }
+                    
                     $quizzes = QuizAttempt::where('user_id', $student->id)->get();
                     $student->quiz_average_score = $quizzes->count() > 0 
                         ? $quizzes->avg('score') 
@@ -201,21 +217,28 @@ class DashboardController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Get all quizzes created by this guru
+            // Get all quizzes created by this guru, grouped by ebook
             $quizzes = QuizQuestion::where('created_by', $user->id)
-                ->select('id', 'ebook_id', 'question', 'created_at')
+                ->select('ebook_id', DB::raw('COUNT(*) as question_count'), DB::raw('MIN(created_at) as created_at'))
                 ->with('ebook:id,title')
+                ->groupBy('ebook_id')
                 ->orderBy('created_at', 'desc')
-                ->paginate(15);
+                ->get()
+                ->map(function ($quiz) {
+                    // Count attempts for this ebook's quiz
+                    $attemptCount = QuizAttempt::where('ebook_id', $quiz->ebook_id)->count();
+                    
+                    return [
+                        'ebook_id' => $quiz->ebook_id,
+                        'ebook_title' => $quiz->ebook->title ?? 'Unknown',
+                        'question_count' => $quiz->question_count,
+                        'attempt_count' => $attemptCount,
+                        'created_at' => $quiz->created_at,
+                    ];
+                });
 
             return response()->json([
-                'data' => $quizzes->items(),
-                'pagination' => [
-                    'current_page' => $quizzes->currentPage(),
-                    'per_page' => $quizzes->perPage(),
-                    'total' => $quizzes->total(),
-                    'last_page' => $quizzes->lastPage(),
-                ],
+                'data' => $quizzes,
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

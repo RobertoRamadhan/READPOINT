@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Models\Ebook;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Smalot\PdfParser\Parser as PdfParser;
+use Illuminate\Support\Facades\Cache;
 
 class EbookController extends Controller
 {
@@ -40,6 +42,45 @@ class EbookController extends Controller
         return response()->json([
             'data' => $ebook,
         ]);
+    }
+
+    // Extract text from PDF
+    public function extractText($id)
+    {
+        try {
+            $ebook = Ebook::where('is_active', true)
+                ->findOrFail($id);
+
+            // Check cache first
+            $cacheKey = 'ebook_text_' . $id;
+            $text = Cache::get($cacheKey);
+
+            if (!$text && $ebook->file_path) {
+                $pdfPath = storage_path('app/public/' . $ebook->file_path);
+                
+                if (!file_exists($pdfPath)) {
+                    return response()->json(['error' => 'PDF file not found'], 404);
+                }
+
+                // Parse PDF
+                $parser = new PdfParser();
+                $pdf = $parser->parseFile($pdfPath);
+                $text = $pdf->getText();
+
+                // Cache for 24 hours
+                Cache::put($cacheKey, $text, 86400);
+            }
+
+            return response()->json([
+                'data' => [
+                    'ebook_id' => $ebook->id,
+                    'title' => $ebook->title,
+                    'text' => $text,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     // Get file PDF (stream untuk reader)

@@ -14,8 +14,7 @@ class RewardController extends Controller
     // Get semua reward aktif (reward catalog)
     public function index()
     {
-        $rewards = Reward::where('is_active', true)
-            ->select('id', 'name', 'description', 'points_required', 'stock', 'icon', 'category', 'image')
+        $rewards = Reward::select('id', 'name', 'description', 'points_required', 'stock', 'icon', 'category', 'image', 'is_active')
             ->get()
             ->map(function ($reward) {
                 // Convert storage path to full URL

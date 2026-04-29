@@ -889,3 +889,9 @@ button:focus-visible {
   h3 { font-size: 1.25rem; }
   p  { font-size: 0.875rem; }
 }
+
+/* ─── Sidebar Text Override ─── */
+.sidebar-user-name,
+.sidebar-user-email {
+  color: white !important;
+}

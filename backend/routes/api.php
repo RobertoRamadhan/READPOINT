@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('ebooks', [EbookController::class, 'index']);
     Route::get('ebooks/{id}', [EbookController::class, 'show']);
     Route::get('ebooks/{id}/pdf', [EbookController::class, 'getPDF']);
+    Route::get('ebooks/{id}/text', [EbookController::class, 'extractText']);
     Route::get('ebooks/{id}/progress', [EbookController::class, 'getUserProgress']);
     
     // Admin only routes
@@ -50,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('quiz/create', [QuizController::class, 'createQuiz']);
         Route::put('quiz/{id}', [QuizController::class, 'updateQuiz']);
         Route::delete('quiz/{id}', [QuizController::class, 'deleteQuiz']);
+        Route::get('quiz/my-quizzes', [QuizController::class, 'getMyQuizzes']);
     });
     
     // Validasi Pembacaan (Guru: validate, Admin: view)
@@ -104,11 +106,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('dashboard/siswa/completed-books', [DashboardController::class, 'siswaCompletedBooks']);
     });
     
+    // User profile (self-access only)
+    Route::get('user/profile', [UserController::class, 'getProfile']);
+    Route::put('user/profile', [UserController::class, 'updateProfile']);
+    
+    // User profile update (self-update allowed via ID)
+    Route::put('users/{id}', [UserController::class, 'update']);
+    
     // User management (Admin only)
     Route::middleware('admin')->group(function () {
         Route::get('users', [UserController::class, 'index']);
         Route::get('users/{id}', [UserController::class, 'show']);
-        Route::put('users/{id}', [UserController::class, 'update']);
         Route::post('users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::post('users/create', [UserController::class, 'createUser']);
         Route::get('dashboard/admin/users-stats', [UserController::class, 'getStatistics']);

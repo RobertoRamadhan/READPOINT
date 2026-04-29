@@ -33,6 +33,7 @@ interface Student {
   class_name?: string;
   total_points?: number;
   books_read?: number;
+  reading_progress?: number;
   quiz_average_score?: number;
   quizzes_passed?: number;
 }
@@ -94,7 +95,7 @@ export default function GuruDashboard() {
       {/* Hamburger Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed top-16 left-4 z-40 p-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-all md:hidden"
+          className="fixed top-16 left-4 z-40 p-2 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-all md:hidden"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -258,7 +259,7 @@ function ProfileSettings() {
       )}
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
           {success}
         </div>
       )}
@@ -294,7 +295,7 @@ function ProfileSettings() {
                 type="file"
                 accept="image/*"
                 onChange={(e) => setFormData({ ...formData, avatar: e.target.files?.[0] || null })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gneen-500"
               />
               <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG. Maksimal 5MB</p>
             </div>
@@ -306,7 +307,7 @@ function ProfileSettings() {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gneen-500"
               required
             />
           </div>
@@ -316,7 +317,7 @@ function ProfileSettings() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gneen-500"
               required
             />
           </div>
@@ -324,7 +325,7 @@ function ProfileSettings() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-all disabled:opacity-50"
+              className="px-6 py-2 bg-gneen-600 text-white rounded-lg font-bold hover:bg-gneen-700 transition-all disabled:opacity-50"
             >
               {submitting ? 'Menyimpan...' : 'Simpan Profil'}
             </button>
@@ -342,7 +343,7 @@ function ProfileSettings() {
               type="password"
               value={formData.current_password}
               onChange={(e) => setFormData({ ...formData, current_password: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
             />
           </div>
@@ -352,7 +353,7 @@ function ProfileSettings() {
               type="password"
               value={formData.new_password}
               onChange={(e) => setFormData({ ...formData, new_password: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
               minLength={6}
             />
@@ -363,7 +364,7 @@ function ProfileSettings() {
               type="password"
               value={formData.password_confirmation}
               onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
               minLength={6}
             />
@@ -372,7 +373,7 @@ function ProfileSettings() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-all disabled:opacity-50"
+              className="px-6 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all disabled:opacity-50"
             >
               {submitting ? 'Menyimpan...' : 'Ubah Password'}
             </button>
@@ -389,7 +390,7 @@ function BerandaTab({ stats, dataLoading }: { stats: GuruStats; dataLoading: boo
     return (
       <div className="text-center py-12">
         <div className="inline-block">
-          <div className="w-12 h-12 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-amber-300 border-t-amber-600 rounded-full animate-spin"></div>
         </div>
         <p className="text-gray-600 font-semibold mt-4">Memuat data...</p>
       </div>
@@ -421,7 +422,7 @@ function BerandaTab({ stats, dataLoading }: { stats: GuruStats; dataLoading: boo
         <StatCard
           title="Students Active Today"
           value={stats.siswa_aktif_hari_ini || 0}
-          color="border-blue-300"
+          color="border-amber-300"
           delay="0.25s"
         />
       </div>
@@ -429,7 +430,7 @@ function BerandaTab({ stats, dataLoading }: { stats: GuruStats; dataLoading: boo
   );
 }
 
-function StatCard({ title, value, color = 'border-blue-600', delay = '0s' }: { title: string; value: number; color?: string; delay?: string }) {
+function StatCard({ title, value, color = 'border-amber-600', delay = '0s' }: { title: string; value: number; color?: string; delay?: string }) {
   return (
     <div
       className={`bg-white rounded-lg shadow-lg border-l-4 ${color} hover:shadow-xl transition-all p-6 transform hover:scale-105 animate-scale-up`}
@@ -640,7 +641,7 @@ function ValidasiTab() {
 // Placeholder for other tabs
 function MonitoringTab() {
   return (
-    <div className="card border-2 border-blue-200 shadow-lg p-8 text-center animate-slide-up">
+    <div className="card border-2 border-amber-200 shadow-lg p-8 text-center animate-slide-up">
       <p className="text-2xl font-bold text-slate-900">Monitoring tab coming soon</p>
     </div>
   );
@@ -649,7 +650,9 @@ function MonitoringTab() {
 function QuizTab() {
   const [selectedEbook, setSelectedEbook] = useState<any>(null);
   const [ebooks, setEbooks] = useState<any[]>([]);
+  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [questions, setQuestions] = useState<QuestionForm[]>([
     { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
     { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' },
@@ -663,6 +666,7 @@ function QuizTab() {
 
   useEffect(() => {
     fetchEbooks();
+    fetchQuizzes();
   }, []);
 
   const fetchEbooks = async () => {
@@ -674,6 +678,15 @@ function QuizTab() {
       setError('Gagal memuat e-book');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchQuizzes = async () => {
+    try {
+      const response = await api.dashboard.guruQuizzes();
+      setQuizzes(Array.isArray(response?.data) ? response.data : []);
+    } catch (err) {
+      console.error('Failed to fetch quizzes:', err);
     }
   };
 
@@ -704,7 +717,9 @@ function QuizTab() {
       });
       setSuccess('✓ Kuis berhasil disimpan!');
       setSelectedEbook(null);
+      setShowCreateForm(false);
       setQuestions(Array(5).fill(null).map(() => ({ question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' })));
+      fetchQuizzes();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError('Gagal menyimpan kuis');
@@ -730,186 +745,232 @@ function QuizTab() {
         </div>
       )}
 
-      <div className="card border-2 border-purple-200 shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-6 flex items-center gap-3">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Create Quiz</h2>
-            <p className="text-purple-100 text-sm">Create a quiz with 5 multiple choice questions</p>
-          </div>
+      {/* Header with Toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Manajemen Kuis</h2>
+          <p className="text-gray-600">Buat dan kelola kuis untuk e-book</p>
         </div>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="px-6 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all"
+        >
+          {showCreateForm ? '← Lihat Daftar Kuis' : '+ Buat Kuis Baru'}
+        </button>
+      </div>
 
-        <div className="p-8 space-y-8">
-          {!selectedEbook ? (
-            <div className="space-y-4">
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-8 text-center">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Select E-Book</h3>
-                <p className="text-slate-600 mb-6">Choose a book to create a new quiz</p>
-
-                {loading ? (
-                  <p className="text-slate-600">Loading e-books...</p>
-                ) : (
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      const ebook = ebooks.find(b => b.id == parseInt(e.target.value));
-                      setSelectedEbook(ebook);
-                    }}
-                    className="w-full border-2 border-blue-300 rounded-lg px-6 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-900 bg-white hover:border-blue-500 transition-all"
-                  >
-                    <option value="">Pilih e-book...</option>
-                    {ebooks.map(b => (
-                      <option key={b.id} value={b.id}>{b.title} • {b.author}</option>
-                    ))}
-                  </select>
-                )}
+      {/* Quiz List */}
+      {!showCreateForm && (
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Kuis yang Dibuat</h3>
+            {quizzes.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Belum ada kuis yang dibuat</p>
               </div>
-            </div>
-          ) : (
-            <>
-              {/* Selected Book Info */}
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-purple-600">📚 E-Book Terpilih</p>
-                    <h3 className="text-2xl font-bold text-slate-900">{selectedEbook.title}</h3>
-                    <p className="text-slate-600 mt-1">✍️ {selectedEbook.author}</p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedEbook(null)}
-                    className="px-4 py-2 bg-white border-2 border-blue-300 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all"
-                  >
-                    Change
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
+            ) : (
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <p className="font-bold text-slate-900">Progres Pertanyaan</p>
-                  <p className="text-lg font-bold text-blue-600">{filledCount}/5</p>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-full transition-all duration-300"
-                    style={{ width: `${(filledCount / 5) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Questions Form */}
-              <div className="space-y-6">
-                {questions.map((q, idx) => (
-                  <div key={idx} className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6 hover:border-gray-400 hover:shadow-lg transition-all">
-                    {/* Question Number and Status */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold text-lg">
-                          {idx + 1}
-                        </span>
-                        <h4 className="font-bold text-lg text-slate-900">Pertanyaan {idx + 1}</h4>
-                      </div>
-                      {q.question.trim() && (
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
-                          Complete
-                        </span>
-                      )}
+                {quizzes.map((quiz) => (
+                  <div key={quiz.ebook_id} className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div>
+                      <h4 className="font-bold text-gray-900">{quiz.ebook_title}</h4>
+                      <p className="text-sm text-gray-600">{quiz.question_count} pertanyaan</p>
                     </div>
-
-                    {/* Question Input */}
-                    <div className="mb-6">
-                      <label className="block text-sm font-bold text-slate-700 mb-2">
-                        Question <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        placeholder={`Buat pertanyaan yang jelas dan menarik untuk nomor ${idx + 1}`}
-                        value={q.question}
-                        onChange={(e) => handleQuestionChange(idx, 'question', e.target.value)}
-                        className="w-full border-2 border-purple-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white placeholder-slate-400 text-slate-900 font-medium"
-                        rows={2}
-                      />
-                    </div>
-
-                    {/* Options Input */}
-                    <div className="mb-6">
-                      <label className="block text-sm font-bold text-slate-700 mb-3">
-                        Answer Options <span className="text-red-500">*</span>
-                      </label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {[
-                          { key: 'option_a', label: 'A' },
-                          { key: 'option_b', label: 'B' },
-                          { key: 'option_c', label: 'C' },
-                          { key: 'option_d', label: 'D' },
-                        ].map(({ key, label }) => (
-                          <div key={key} className="flex items-center gap-2">
-                            <span className="flex items-center justify-center w-8 h-8 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm">
-                              {label}
-                            </span>
-                            <input
-                              type="text"
-                              placeholder={`Opsi ${label}`}
-                              value={q[key as keyof QuestionForm] as string}
-                              onChange={(e) => handleQuestionChange(idx, key, e.target.value)}
-                              className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-900"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Correct Answer */}
-                    <div className="bg-white border-2 border-gray-300 rounded-lg p-4">
-                      <label className="block text-sm font-bold text-slate-700 mb-3">
-                        Correct Answer <span className="text-red-500">*</span>
-                      </label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {['a', 'b', 'c', 'd'].map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => handleQuestionChange(idx, 'correct_answer', option)}
-                            className={`py-2 px-3 rounded-lg font-bold transition-all ${
-                              q.correct_answer === option
-                                ? 'bg-blue-600 text-white shadow-lg scale-105'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            {option.toUpperCase()}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-amber-600">{quiz.attempt_count}</p>
+                      <p className="text-xs text-gray-600">siswa menjawab</p>
                     </div>
                   </div>
                 ))}
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t-2 border-gray-300">
-                <button
-                  onClick={handleSubmitQuiz}
-                  disabled={submitting || filledCount < 5}
-                  className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all ${
-                    submitting || filledCount < 5
-                      ? 'bg-slate-300 text-slate-600 cursor-not-allowed opacity-60'
-                      : 'bg-blue-600 text-white hover:shadow-xl hover:scale-105'
-                  }`}
-                >
-                  {submitting ? 'Saving...' : 'Save Quiz'}
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedEbook(null);
-                    setError('');
-                  }}
-                  className="flex-1 bg-slate-200 text-slate-700 py-4 rounded-lg font-bold hover:bg-slate-300 transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Create Quiz Form */}
+      {showCreateForm && (
+        <div className="card border-2 border-purple-200 shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-6 flex items-center gap-3">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Create Quiz</h2>
+              <p className="text-purple-100 text-sm">Create a quiz with 5 multiple choice questions</p>
+            </div>
+          </div>
+
+          <div className="p-8 space-y-8">
+            {!selectedEbook ? (
+              <div className="space-y-4">
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-8 text-center">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Select E-Book</h3>
+                  <p className="text-slate-600 mb-6">Choose a book to create a new quiz</p>
+
+                  {loading ? (
+                    <p className="text-slate-600">Loading e-books...</p>
+                  ) : (
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const ebook = ebooks.find(b => b.id == parseInt(e.target.value));
+                        setSelectedEbook(ebook);
+                      }}
+                      className="w-full border-2 border-amber-300 rounded-lg px-6 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900 bg-white hover:border-amber-500 transition-all"
+                    >
+                      <option value="">Pilih e-book...</option>
+                      {ebooks.map(b => (
+                        <option key={b.id} value={b.id}>{b.title} • {b.author}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Selected Book Info */}
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-purple-600">📚 E-Book Terpilih</p>
+                      <h3 className="text-2xl font-bold text-slate-900">{selectedEbook.title}</h3>
+                      <p className="text-slate-600 mt-1">✍️ {selectedEbook.author}</p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedEbook(null)}
+                      className="px-4 py-2 bg-white border-2 border-amber-300 text-amber-600 rounded-lg font-semibold hover:bg-amber-50 transition-all"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <p className="font-bold text-slate-900">Progres Pertanyaan</p>
+                    <p className="text-lg font-bold text-amber-600">{filledCount}/5</p>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-amber-600 h-full transition-all duration-300"
+                      style={{ width: `${(filledCount / 5) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Questions Form */}
+                <div className="space-y-6">
+                  {questions.map((q, idx) => (
+                    <div key={idx} className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6 hover:border-gray-400 hover:shadow-lg transition-all">
+                      {/* Question Number and Status */}
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center justify-center w-10 h-10 bg-amber-600 text-white rounded-full font-bold text-lg">
+                            {idx + 1}
+                          </span>
+                          <h4 className="font-bold text-lg text-slate-900">Pertanyaan {idx + 1}</h4>
+                        </div>
+                        {q.question.trim() && (
+                          <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
+                            Complete
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Question Input */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                          Question <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          placeholder={`Buat pertanyaan yang jelas dan menarik untuk nomor ${idx + 1}`}
+                          value={q.question}
+                          onChange={(e) => handleQuestionChange(idx, 'question', e.target.value)}
+                          className="w-full border-2 border-purple-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white placeholder-slate-400 text-slate-900 font-medium"
+                          rows={2}
+                        />
+                      </div>
+
+                      {/* Options Input */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-bold text-slate-700 mb-3">
+                          Answer Options <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {[
+                            { key: 'option_a', label: 'A' },
+                            { key: 'option_b', label: 'B' },
+                            { key: 'option_c', label: 'C' },
+                            { key: 'option_d', label: 'D' },
+                          ].map(({ key, label }) => (
+                            <div key={key} className="flex items-center gap-2">
+                              <span className="flex items-center justify-center w-8 h-8 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm">
+                                {label}
+                              </span>
+                              <input
+                                type="text"
+                                placeholder={`Opsi ${label}`}
+                                value={q[key as keyof QuestionForm] as string}
+                                onChange={(e) => handleQuestionChange(idx, key, e.target.value)}
+                                className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white text-slate-900"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Correct Answer */}
+                      <div className="bg-white border-2 border-gray-300 rounded-lg p-4">
+                        <label className="block text-sm font-bold text-slate-700 mb-3">
+                          Correct Answer <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {['a', 'b', 'c', 'd'].map((option) => (
+                            <button
+                              key={option}
+                              onClick={() => handleQuestionChange(idx, 'correct_answer', option)}
+                              className={`py-2 px-3 rounded-lg font-bold transition-all ${
+                                q.correct_answer === option
+                                  ? 'bg-amber-600 text-white shadow-lg scale-105'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                            >
+                              {option.toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t-2 border-gray-300">
+                  <button
+                    onClick={handleSubmitQuiz}
+                    disabled={submitting || filledCount < 5}
+                    className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all ${
+                      submitting || filledCount < 5
+                        ? 'bg-slate-300 text-slate-600 cursor-not-allowed opacity-60'
+                        : 'bg-amber-600 text-white hover:shadow-xl hover:scale-105'
+                    }`}
+                  >
+                    {submitting ? 'Saving...' : 'Save Quiz'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedEbook(null);
+                      setError('');
+                    }}
+                    className="flex-1 bg-slate-200 text-slate-700 py-4 rounded-lg font-bold hover:bg-slate-300 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -943,7 +1004,7 @@ function StudentListTab() {
   return (
     <div className="space-y-6 animate-slide-up">
       <div className="card border-2 border-cyan-200 shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-4 flex items-center gap-3">
+        <div className="bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-4 flex items-center gap-3">
           <h2 className="text-xl font-bold text-white">Student List</h2>
         </div>
 
@@ -953,7 +1014,7 @@ function StudentListTab() {
             placeholder="Search student..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full border-2 border-amber-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
 
           {loading ? (
@@ -962,17 +1023,18 @@ function StudentListTab() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b-2 border-cyan-200 bg-cyan-50">
+                  <tr className="border-b-2 border-amber-200 bg-amber-50">
                     <th className="px-4 py-2 text-left font-bold">Nama</th>
                     <th className="px-4 py-2 text-center font-bold">Poin</th>
                     <th className="px-4 py-2 text-center font-bold">Buku</th>
+                    <th className="px-4 py-2 text-center font-bold">Progress Baca</th>
                     <th className="px-4 py-2 text-center font-bold">Kuis Avg</th>
                     <th className="px-4 py-2 text-center font-bold">Lulus</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredData.map(student => (
-                    <tr key={student.id} className="border-b border-cyan-100 hover:bg-cyan-50 transition-all">
+                    <tr key={student.id} className="border-b border-amber-100 hover:bg-amber-50 transition-all">
                       <td className="px-4 py-3">
                         <div>
                           <p className="font-bold text-slate-900">{student.name}</p>
@@ -980,10 +1042,21 @@ function StudentListTab() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="font-bold text-lg text-blue-600">{student.total_points || 0}</span>
+                        <span className="font-bold text-lg text-amber-600">{student.total_points || 0}</span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="font-semibold">{student.books_read || 0}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="w-24 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-amber-600 h-2 rounded-full"
+                              style={{ width: `${student.reading_progress || 0}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold text-amber-700">{Math.round(student.reading_progress || 0)}%</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="font-semibold">{(student.quiz_average_score || 0).toFixed(1)}%</span>

@@ -10,6 +10,7 @@ import QuizList from '@/components/siswa/QuizList';
 import TabNavigation from '@/components/siswa/TabNavigation';
 import FavoriteBooksSlider from '@/components/siswa/FavoriteBooksSlider';
 import OverviewTab from '@/components/siswa/OverviewTab';
+import SearchBar from '@/components/shared/SearchBar';
 
 interface SiswaStats {
   total_points: number;
@@ -49,15 +50,24 @@ interface Quiz {
   points_reward: number;
 }
 
+interface SiswaStats {
+  total_points: number;
+  books_read: number;
+  pages_read: number;
+  quizzes_taken: number;
+}
+
 export default function SiswaDashboard() {
   const { user, loading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState<SiswaStats | null>(null);
   const [ebooks, setEbooks] = useState<Ebook[]>([]);
   const [favoriteBooks, setFavoriteBooks] = useState<Ebook[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'ebooks' | 'rewards' | 'quizzes'>('overview');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,6 +90,10 @@ export default function SiswaDashboard() {
     try {
       setLoadingData(true);
       setError(null);
+
+      // Load stats
+      const statsRes = await api.dashboard.siswaStats();
+      setStats((statsRes as any) as SiswaStats | null);
 
       // Load ebooks
       const ebooksRes = await api.ebooks.list();
@@ -106,7 +120,13 @@ export default function SiswaDashboard() {
       }
 
       // Load quizzes from API
-      setQuizzes([]);
+      const quizzesRes = await api.getQuizzes(0); // Get all quizzes
+      if (quizzesRes?.data) {
+        const quizzesArray = Array.isArray(quizzesRes.data) 
+          ? quizzesRes.data 
+          : [];
+        setQuizzes(quizzesArray as Quiz[]);
+      }
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to load dashboard data';
@@ -144,7 +164,7 @@ export default function SiswaDashboard() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-700 relative overflow-hidden">
+    <div className="w-full min-h-screen bg-gradient-to-b from-amber-50 via-amber-100 to-amber-50 relative overflow-hidden">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="w-full">
           {error && (
@@ -152,6 +172,14 @@ export default function SiswaDashboard() {
               {error}
             </div>
           )}
+
+          {/* Search Bar - Always visible */}
+          <div className="mb-6">
+            <SearchBar
+              onSearch={setSearchQuery}
+              placeholder="Cari buku berdasarkan judul, penulis, atau kategori..."
+            />
+          </div>
 
           {/* Tab Navigation */}
           <div className="mb-8">
@@ -166,7 +194,7 @@ export default function SiswaDashboard() {
 
           {/* Frequently Read Books Slider - Always show below navigation */}
           {favoriteBooks.length > 0 && (
-            <div className="mb-8 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-700">
+            <div className="mb-8 bg-gradient-to-b from-amber-100 via-amber-50 to-amber-100">
               <FavoriteBooksSlider
                 books={favoriteBooks}
                 onBookClick={(bookId) => {
@@ -184,7 +212,7 @@ export default function SiswaDashboard() {
           <div className="w-full h-6 bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 mb-8 shadow-md"></div>
 
           {/* Content Sections */}
-          <div className="bg-white w-full p-6">
+          <div className="bg-amber-50 w-full p-6">
             {loadingData ? (
               <div className="text-center py-12">
                 <div className="inline-block">
@@ -201,13 +229,14 @@ export default function SiswaDashboard() {
                   <BookGrid
                     ebooks={ebooks}
                     loading={loadingData}
+                    searchQuery={searchQuery}
                   />
                 )}
 
                 {activeTab === 'rewards' && (
                   <RewardGrid
                     rewards={rewards}
-                    userPoints={0}
+                    userPoints={stats?.total_points || 0}
                     loading={loadingData}
                     onRedeem={handleRedeemReward}
                   />
@@ -218,7 +247,7 @@ export default function SiswaDashboard() {
                     quizzes={quizzes}
                     loading={loadingData}
                     onStartQuiz={(quizId: number) => {
-                      router.push(`/quiz/${quizId}`);
+                      router.push(`/dashboard/siswa/quiz/${quizId}`);
                     }}
                   />
                 )}

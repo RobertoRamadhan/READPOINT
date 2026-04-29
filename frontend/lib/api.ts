@@ -298,6 +298,41 @@ export const api = {
       }),
   },
 
+  // Current User (for profile management - non-admin)
+  me: {
+    getProfile: (): Promise<ApiResponse> => apiCall('/user/profile'),
+    updateProfile: async (data: FormData | Record<string, unknown>): Promise<ApiResponse> => {
+      if (data instanceof FormData) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const csrfToken = await getCsrfToken();
+        
+        // Add _method parameter for Laravel to simulate PUT
+        data.append('_method', 'PUT');
+        
+        const response = await fetch(`${API_URL}/user/profile`, {
+          method: 'POST',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+          },
+          credentials: 'include',
+          body: data,
+        });
+        
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `HTTP ${response.status}: Failed to update profile`);
+        }
+        return result;
+      }
+      
+      return apiCall('/user/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+  },
+
   // Dashboard
   dashboard: {
     adminStats: (): Promise<ApiResponse> => apiCall('/dashboard/admin/stats'),
@@ -307,6 +342,7 @@ export const api = {
     
     guruStats: (): Promise<ApiResponse> => apiCall('/dashboard/guru/stats'),
     guruStudents: (): Promise<ApiResponse> => apiCall('/dashboard/guru/students'),
+    guruQuizzes: (): Promise<ApiResponse> => apiCall('/dashboard/guru/quizzes'),
     
     siswaStats: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/stats'),
     siswaBooks: (): Promise<ApiResponse> => apiCall('/dashboard/siswa/books'),
